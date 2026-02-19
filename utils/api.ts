@@ -17,9 +17,10 @@ const DEV_URL =
         ? 'http://10.0.2.2:5000'
         : 'http://localhost:5000';
 
-export const BACKEND_URL = 'https://financebackend-331581307981.europe-west1.run.app';
-// For production, replace with your Cloud Run URL:
-// export const BACKEND_URL = 'http://localhost:5000';
+// In Expo Web, process.env.EXPO_PUBLIC_* variables are inlined at build time.
+// Cloud Run -> use production URL from .env
+// Development -> fallback to DEV_URL
+export const BACKEND_URL = process.env.EXPO_PUBLIC_API_URL || DEV_URL;
 
 // ── Generic fetch helper ─────────────────────────────────
 
