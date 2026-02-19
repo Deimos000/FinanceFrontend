@@ -1,4 +1,3 @@
-
 import { TransactionRow } from '@/components/finance/TransactionRow';
 import { TransactionDetailModal } from '@/components/finance/TransactionDetailModal';
 import { Card } from '@/components/ui/Card';
@@ -6,14 +5,17 @@ import { Account } from '@/utils/bankingMapper';
 import { fetchCashAccount } from '@/utils/api';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useFocusEffect } from 'expo-router';
-import React, { useCallback, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { CashTransactionModal } from '@/components/finance/CashTransactionModal';
 import { EditBalanceModal } from '@/components/finance/EditBalanceModal';
 import { useTheme } from '@/context/ThemeContext';
+import { createCashAccountStyles } from '@/app/styles/screens/cash-account.styles';
 
 export default function CashAccountScreen() {
     const { colors: theme } = useTheme();
+    const styles = useMemo(() => createCashAccountStyles(theme), [theme]);
+
     const [account, setAccount] = useState<Account | null>(null);
     const [loading, setLoading] = useState(true);
     const [txModalVisible, setTxModalVisible] = useState(false);
@@ -82,7 +84,7 @@ export default function CashAccountScreen() {
 
     if (loading) {
         return (
-            <View style={[styles.container, { backgroundColor: theme.background, justifyContent: 'center', alignItems: 'center' }]}>
+            <View style={[styles.container, styles.centered, { backgroundColor: theme.background }]}>
                 <ActivityIndicator size="large" color={theme.primary} />
             </View>
         );
@@ -90,7 +92,7 @@ export default function CashAccountScreen() {
 
     if (!account) {
         return (
-            <View style={[styles.container, { backgroundColor: theme.background, justifyContent: 'center', alignItems: 'center' }]}>
+            <View style={[styles.container, styles.centered, { backgroundColor: theme.background }]}>
                 <Text style={{ color: theme.text }}>Cash Account not found.</Text>
             </View>
         );
@@ -136,7 +138,7 @@ export default function CashAccountScreen() {
 
                 <View style={styles.list}>
                     {account.transactions.length === 0 ? (
-                        <Text style={{ color: theme.icon, textAlign: 'center', marginTop: 20 }}>No transactions yet.</Text>
+                        <Text style={[styles.emptyText, { color: theme.icon }]}>No transactions yet.</Text>
                     ) : (
                         account.transactions.map((t, index) => (
                             <Card key={t.transactionId} style={[styles.txCard, {
@@ -183,76 +185,3 @@ export default function CashAccountScreen() {
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    content: {
-        padding: 20,
-    },
-    balanceCard: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: 24,
-        borderRadius: 20,
-        borderWidth: 1,
-        marginBottom: 20,
-    },
-    label: {
-        fontSize: 14,
-        fontWeight: '600',
-        marginBottom: 8,
-        opacity: 0.7,
-        textTransform: 'uppercase',
-        letterSpacing: 0.5,
-    },
-    balance: {
-        fontSize: 36,
-        fontWeight: '800',
-    },
-    editButton: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    actions: {
-        marginBottom: 30,
-    },
-    actionButton: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 18,
-        borderRadius: 16,
-        gap: 8,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-        elevation: 4,
-    },
-    actionButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '700',
-    },
-    sectionTitle: {
-        fontSize: 18,
-        fontWeight: '700',
-        marginBottom: 15,
-    },
-    list: {
-        borderRadius: 16,
-        overflow: 'hidden',
-    },
-    txCard: {
-        marginBottom: 0,
-        borderRadius: 0,
-        elevation: 0,
-        backgroundColor: 'transparent'
-    }
-});

@@ -5,20 +5,24 @@ export default function StockLayout() {
     return (
         <Stack
             screenOptions={{
-                headerStyle: { backgroundColor: STOCK_THEME.background },
-                headerTintColor: STOCK_THEME.text,
+                headerShown: false,
                 contentStyle: { backgroundColor: STOCK_THEME.background },
-                headerShadowVisible: false,
-                headerTitleStyle: { fontWeight: 'bold' },
+                presentation: 'card',
             }}
         >
             <Stack.Screen name="index" options={{ headerShown: false }} />
             <Stack.Screen
                 name="[symbol]"
                 options={{
-                    presentation: 'modal', // Nice touch for details
-                    headerTitle: '',
-                    headerTransparent: true,
+                    headerShown: false,
+                    presentation: 'card',
+                }}
+            />
+            <Stack.Screen
+                name="sandbox/[id]"
+                options={{
+                    headerShown: false,
+                    presentation: 'card',
                 }}
             />
         </Stack>

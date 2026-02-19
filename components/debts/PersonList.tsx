@@ -1,13 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
+import React, { useEffect, useState, useMemo } from 'react';
+import { View, Text, FlatList, ActivityIndicator } from 'react-native';
 import { useDebtsDatabase, Person } from '../../hooks/useDebtsDatabase';
 import { useTheme } from '@/context/ThemeContext';
+import { createPersonListStyles } from '@/app/styles/components/PersonList.styles';
 
 export default function PersonList({ refreshTrigger }: { refreshTrigger: number }) {
     const { isReady, getPeopleSummary, error } = useDebtsDatabase();
     const [people, setPeople] = useState<Person[]>([]);
     const [loading, setLoading] = useState(true);
     const { colors: theme } = useTheme();
+    const styles = useMemo(() => createPersonListStyles(theme), [theme]);
 
     useEffect(() => {
         if (isReady) {
@@ -27,19 +29,21 @@ export default function PersonList({ refreshTrigger }: { refreshTrigger: number 
     };
 
     if (!isReady || loading) return <ActivityIndicator color={theme.primary} />;
-    if (error) return <Text style={[styles.emptyText, { color: theme.danger }]}>Database error: {error}</Text>;
+    if (error) return <Text style={styles.errorText}>Database error: {error}</Text>;
 
     return (
         <FlatList
+            style={{ flex: 1 }}
+            contentContainerStyle={{ paddingBottom: 20 }}
             data={people}
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => (
-                <View style={[styles.card, { backgroundColor: theme.cardBackground }]}>
+                <View style={styles.card}>
                     <View style={styles.leftContent}>
-                        <View style={[styles.iconCircle, { backgroundColor: theme.primary }]}>
+                        <View style={styles.iconCircle}>
                             <Text style={styles.iconText}>{item.name.charAt(0).toUpperCase()}</Text>
                         </View>
-                        <Text style={[styles.name, { color: theme.text }]} numberOfLines={1}>{item.name}</Text>
+                        <Text style={styles.name} numberOfLines={1}>{item.name}</Text>
                     </View>
                     <View style={styles.rightContent}>
                         <Text style={[
@@ -48,64 +52,13 @@ export default function PersonList({ refreshTrigger }: { refreshTrigger: number 
                         ]}>
                             {item.netBalance > 0 ? '+' : ''}{item.netBalance.toFixed(2)} €
                         </Text>
-                        <Text style={[styles.balanceLabel, { color: theme.icon }]}>
+                        <Text style={styles.balanceLabel}>
                             {item.netBalance > 0 ? 'owes you' : (item.netBalance < 0 ? 'you owe' : 'settled')}
                         </Text>
                     </View>
                 </View>
             )}
-            ListEmptyComponent={<Text style={[styles.emptyText, { color: theme.icon }]}>No debts recorded yet.</Text>}
+            ListEmptyComponent={<Text style={styles.emptyText}>No debts recorded yet.</Text>}
         />
     );
 }
-
-const styles = StyleSheet.create({
-    card: {
-        padding: 16,
-        borderRadius: 12,
-        marginBottom: 10,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    leftContent: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        flex: 1,
-        marginRight: 12,
-    },
-    iconCircle: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 12,
-    },
-    iconText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    name: {
-        fontSize: 16,
-        fontWeight: '600',
-        flex: 1,
-    },
-    rightContent: {
-        alignItems: 'flex-end',
-    },
-    balance: {
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    balanceLabel: {
-        fontSize: 12,
-        marginTop: 2,
-    },
-    emptyText: {
-        textAlign: 'center',
-        marginTop: 40,
-        fontSize: 16
-    }
-});

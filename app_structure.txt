@@ -1,0 +1,68 @@
+# App Structure & Desktop Restructuring Analysis (Comprehensive)
+
+## Project Overview
+This is a high-performance, Expo Router based React Native application using TypeScript. It serves as a central hub for personal finance, integrating bank accounts, peer-to-peer debt tracking, and real-time stock market analysis with virtual trading capabilities.
+
+---
+
+## Detailed Navigation & Tab Analysis
+
+### 1. Home Dashboard (`app/(tabs)/index.tsx`)
+- **What it does:** Serves as the application's central nervous system, providing a high-level summary of the user's entire financial state.
+- **How it works:** It utilizes the `useBankData` hook to fetch and aggregate balances from all linked accounts. It calculates "Total Net Worth" and "Cash on Hand" in real-time. It groups the last 50 transactions using a dedicated date-grouping utility to show recent activity.
+- **What it accomplishes:** Provides the user with immediate clarity on their financial health the moment they open the app and offers "Quick Action" shortcuts to dive into specific tasks like budgeting or investing.
+- **Current Layout:** Vertical summary with horizontal "Quick Action" scrolls.
+- **Desktop Goal:** A "Command Center" dashboard and grid-based widgets.
+
+### 2. Debt Tracker (`app/(tabs)/debts.tsx`)
+- **What it does:** Manages private loans and debts between the user and their contacts (People).
+- **How it works:** Built on a relational-logic backend accessed via `useDebtsDatabase`. It tracks "People" who are linked to multiple "Debts", which can further be broken down into "Sub-Debts" (partial payments). It filters views based on the debt type (`OWED_BY_ME` vs `OWED_TO_ME`).
+- **What it accomplishes:** Eliminates the social friction of tracking shared expenses or personal loans, ensuring all balances are transparent and accounted for.
+- **Current Layout:** Tabbed view (Overall, I Owe, Owed to Me) with person-based summary cards.
+- **Desktop Goal:** Split-view layout with a contact list on the left and a detailed payment ledger on the right.
+
+### 3. Stocks & Virtual Trading (`app/(tabs)/stocks/`)
+- **What it does:** Provides a professional-grade interface for stock research and risk-free practice trading.
+- **How it works:** 
+    - **Market Data:** Communicates with a Yahoo Finance proxy for real-time quotes, deep-dive metrics (PE ratios, margins), and historical data.
+    - **Charts:** Uses a custom SVG-based `InteractiveChart` that supports touch/mouse scrubbing for price discovery at specific timestamps.
+    - **State Management:** Uses `Zustand` (`useStockStore`) to handle a persistent global watchlist that syncs with the database.
+    - **Sandbox:** A virtual environment where users can "Trade" using virtual currency, tracking their "Equity History" through a separate portfolio logic.
+- **What it accomplishes:** Bridges the gap between financial education and execution, allowing users to learn the market and follow their favorite assets without initial capital risk.
+- **Current Layout:** Nested navigation (Search/Market -> Details -> Sandbox).
+- **Desktop Goal:** A multi-pane "Trading Station" view with persistent watchlists and large-format technical charts.
+
+### 4. Spending Statistics (`app/(tabs)/statistics.tsx`)
+- **What it does:** Analyzes spending habits and trends through automated data visualization and AI.
+- **How it works:** Leverages Gemini AI to automatically categorize raw bank transaction labels. It visualizes this data using `TrendChart` (time-series spending) and `CategoryBreakdown` (proportional spending). It provides a reconciliation interface for "Uncategorized" items.
+- **What it accomplishes:** Transforms a messy list of bank transactions into actionable insights, helping users understand their lifestyle costs and identify potential saving areas.
+- **Current Layout:** Toggle between "Overview" (Charts) and "Transactions" (AI Categorization).
+- **Desktop Goal:** Comprehensive analytics dashboard with adjustable date ranges and data export tools.
+
+### 5. Bank Connections (`app/(tabs)/accounts.tsx`)
+- **What it does:** Manages the secure link between the app and the user's real-world bank accounts.
+- **How it works:** Implements a full Open Banking OAuth flow. It uses `WebBrowser` to handle redirects to major banks (Commerzbank, N26). It includes a manual URL parsing fallback to ensure robust connection even when deep-linking fails.
+- **What it accomplishes:** Automates the most tedious part of financial tracking—data entry—by safely pulling live data directly from the source.
+- **Current Layout:** Connection action buttons and a list of linked `AccountCards`.
+- **Desktop Goal:** A centralized "Management Console" for all data sources and sync logs.
+
+### 6. User Preferences & Security (`app/(tabs)/settings.tsx`)
+- **What it does:** Configures the app's behavior, security, and visual appearance.
+- **How it works:** Syncs with `ThemeContext` to toggle between Light and Dark themes (persisted via `AsyncStorage`). It manages hardware security settings like Biometrics (Face ID/Touch ID) and notification preferences.
+- **What it accomplishes:** Ensures the app is both personally comfortable to use and sufficiently protected given the sensitivity of financial data.
+- **Current Layout:** Standardized card-based settings rows with switch toggles.
+- **Desktop Goal:** Two-column settings interface with categorical navigation on the left.
+
+---
+
+## Shared Architecture Details
+
+### Component Libraries (`components/`)
+-   **Shared UI:** Located in `components/ui` (Base Card, Themed Text).
+-   **Domain Components:** Organised by feature (`components/debts`, `components/finance`, `components/stats`).
+-   **Standardization:** All transaction-related views share the `TransactionRow` component for visual consistency.
+
+### Data Flow Strategy
+-   **Backend:** A centralized Flask-based API serves as the single source of truth, abstracting both the local database and external proxies (Yahoo, Banking).
+-   **Theming:** Centralized in `context/ThemeContext.tsx`, ensuring that any new component automatically adapts to the user's preferred visual mode.
+-   **Responsiveness:** Currently mobile-first, using `useWindowDimensions` and `Platform.OS` to handle minor variations, with a major restructuring planned for a native Desktop/Web experience.

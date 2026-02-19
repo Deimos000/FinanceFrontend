@@ -1,7 +1,8 @@
+
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import Svg, { Polyline } from 'react-native-svg';
-import { Stock } from '../_utils/types';
+import { WishlistItem } from '../_utils/types';
 import { useTheme } from '@/context/ThemeContext';
 
 const Sparkline = ({ data, color }: { data: number[]; color: string }) => {
@@ -31,41 +32,86 @@ const Sparkline = ({ data, color }: { data: number[]; color: string }) => {
     );
 };
 
-export const WatchlistCard = ({ item }: { item: Stock }) => {
+export const WatchlistCard = ({ item, onPress, style }: { item: WishlistItem; onPress?: () => void; style?: any }) => {
     const { colors: theme } = useTheme();
-    const isPositive = item.change >= 0;
+    // Prefer current data, fallback to snapshot
+    const stock = item.current || item.snapshot;
+
+    // Fallback if no snapshot
+    if (!stock) {
+        return (
+            <TouchableOpacity
+                style={[styles.card, { backgroundColor: theme.cardBackground, borderColor: theme.border }, style]}
+                onPress={onPress}
+            >
+                <View style={styles.topRow}>
+                    <Text style={[styles.symbol, { color: theme.text }]}>{item.symbol}</Text>
+                </View>
+                <View style={styles.bottomRow}>
+                    <Text style={[styles.price, { color: theme.text, fontSize: 14 }]}>
+                        Initial: ${item.initial_price?.toFixed(2)}
+                    </Text>
+                </View>
+            </TouchableOpacity>
+        );
+    }
+
+    const isPositive = stock.change >= 0;
     const color = isPositive ? theme.secondary : theme.danger;
-    const historyValues = item.history.map(h => h.value);
+    const historyValues = stock.history?.map(h => h.value) || [];
+
+    const dateAdded = item.added_at ? new Date(item.added_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '';
 
     return (
-        <View style={[styles.card, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}>
+        <TouchableOpacity
+            style={[styles.card, { backgroundColor: theme.cardBackground, borderColor: theme.border }, style]}
+            onPress={onPress}
+        >
             <View style={styles.topRow}>
                 <Text style={[styles.symbol, { color: theme.text }]}>{item.symbol}</Text>
                 <Text style={[styles.percent, { color }]}>
-                    {isPositive ? '+' : ''}{item.changePercent.toFixed(2)}%
+                    {isPositive ? '+' : ''}{stock.changePercent?.toFixed(2)}%
                 </Text>
             </View>
 
             <View style={styles.chartContainer}>
-                <Sparkline data={historyValues} color={color} />
+                {historyValues.length > 0 && <Sparkline data={historyValues} color={color} />}
             </View>
 
             <View style={styles.bottomRow}>
                 <Text style={[styles.price, { color: theme.text }]}>
-                    ${item.price.toFixed(2)}
+                    ${stock.price?.toFixed(2)}
                 </Text>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
+                    {dateAdded ? (
+                        <Text style={{ fontSize: 10, color: theme.icon }}>
+                            {dateAdded}
+                        </Text>
+                    ) : <View />}
+
+                    {/* Show gain/loss since added */}
+                    {item.initial_price && (
+                        <Text style={{
+                            fontSize: 10,
+                            color: stock.price >= item.initial_price ? theme.secondary : theme.danger,
+                            fontWeight: '600'
+                        }}>
+                            {((stock.price - item.initial_price) / item.initial_price * 100).toFixed(1)}% since add
+                        </Text>
+                    )}
+                </View>
             </View>
-        </View>
+        </TouchableOpacity>
     );
 };
 
 const styles = StyleSheet.create({
     card: {
-        width: 140,
-        height: 140,
+
+        height: 150,
         borderRadius: 16,
         padding: 12,
-        marginRight: 10,
+        marginBottom: 10,
         borderWidth: 1,
         justifyContent: 'space-between'
     },

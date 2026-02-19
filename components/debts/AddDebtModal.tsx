@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, TextInput, Alert, ScrollView, Dimensions, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useState, useEffect, useMemo } from 'react';
+import { View, Text, Modal, TouchableOpacity, TextInput, Alert, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { X, ChevronLeft } from 'lucide-react-native';
 import { useDebtsDatabase } from '../../hooks/useDebtsDatabase';
 import { useTheme } from '@/context/ThemeContext';
-
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+import { createAddDebtModalStyles } from '@/app/styles/components/AddDebtModal.styles';
 
 interface AddDebtModalProps {
     visible: boolean;
@@ -20,6 +19,7 @@ export default function AddDebtModal({ visible, onClose, onSuccess }: AddDebtMod
     const [selectedPersonId, setSelectedPersonId] = useState<number | null>(null);
     const [selectedPersonName, setSelectedPersonName] = useState('');
     const { colors: theme } = useTheme();
+    const styles = useMemo(() => createAddDebtModalStyles(theme), [theme]);
 
     // Debt Details
     const [amount, setAmount] = useState('');
@@ -97,10 +97,7 @@ export default function AddDebtModal({ visible, onClose, onSuccess }: AddDebtMod
         }
     };
 
-    const inputBaseStyle = {
-        backgroundColor: theme.background,
-        color: theme.text,
-    };
+    const inputOutlineStyle = Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {};
 
     return (
         <Modal visible={visible} animationType="slide" transparent>
@@ -110,15 +107,15 @@ export default function AddDebtModal({ visible, onClose, onSuccess }: AddDebtMod
             {/* Bottom Sheet */}
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                style={[styles.sheet, { backgroundColor: theme.cardBackground }]}
+                style={styles.sheet}
             >
                 {/* Handle bar */}
                 <View style={styles.handleContainer}>
-                    <View style={[styles.handle, { backgroundColor: theme.icon }]} />
+                    <View style={styles.handle} />
                 </View>
 
                 {/* Header */}
-                <View style={[styles.header, { borderBottomColor: theme.border }]}>
+                <View style={styles.header}>
                     {step === 'DETAILS' ? (
                         <TouchableOpacity onPress={handleBackToPerson} style={styles.headerBtn}>
                             <ChevronLeft color={theme.primary} size={22} />
@@ -126,7 +123,7 @@ export default function AddDebtModal({ visible, onClose, onSuccess }: AddDebtMod
                     ) : (
                         <View style={styles.headerBtn} />
                     )}
-                    <Text style={[styles.title, { color: theme.text }]} numberOfLines={1}>
+                    <Text style={styles.title} numberOfLines={1}>
                         {step === 'PERSON' ? 'New Debt' : selectedPersonName}
                     </Text>
                     <TouchableOpacity onPress={onClose} style={styles.headerBtn}>
@@ -139,7 +136,7 @@ export default function AddDebtModal({ visible, onClose, onSuccess }: AddDebtMod
                         {/* New Person Input */}
                         <View style={styles.row}>
                             <TextInput
-                                style={[styles.input, inputBaseStyle, Platform.OS === 'web' && { outlineStyle: 'none' } as any]}
+                                style={[styles.input, inputOutlineStyle]}
                                 placeholder="Add new person..."
                                 placeholderTextColor={theme.icon}
                                 value={personName}
@@ -147,7 +144,7 @@ export default function AddDebtModal({ visible, onClose, onSuccess }: AddDebtMod
                                 onSubmitEditing={handleCreatePerson}
                             />
                             <TouchableOpacity
-                                style={[styles.addBtn, { backgroundColor: theme.primary }, !personName.trim() && { backgroundColor: theme.border }]}
+                                style={[styles.addBtn, !personName.trim() && styles.addBtnDisabled]}
                                 onPress={handleCreatePerson}
                                 disabled={!personName.trim()}
                             >
@@ -157,14 +154,14 @@ export default function AddDebtModal({ visible, onClose, onSuccess }: AddDebtMod
 
                         {people.length > 0 && (
                             <ScrollView style={styles.peopleScroll} showsVerticalScrollIndicator={false}>
-                                <Text style={[styles.label, { color: theme.icon }]}>Or select existing:</Text>
+                                <Text style={styles.label}>Or select existing:</Text>
                                 {people.map(p => (
                                     <TouchableOpacity
                                         key={p.id}
-                                        style={[styles.personItem, { backgroundColor: theme.background }]}
+                                        style={styles.personItem}
                                         onPress={() => handleSelectPerson(p.id, p.name)}
                                     >
-                                        <Text style={[styles.personName, { color: theme.text }]}>{p.name}</Text>
+                                        <Text style={styles.personName}>{p.name}</Text>
                                     </TouchableOpacity>
                                 ))}
                             </ScrollView>
@@ -173,25 +170,25 @@ export default function AddDebtModal({ visible, onClose, onSuccess }: AddDebtMod
                 ) : (
                     <View style={styles.content}>
                         {/* Type Toggle */}
-                        <View style={[styles.typeToggle, { backgroundColor: theme.background }]}>
+                        <View style={styles.typeToggle}>
                             <TouchableOpacity
-                                style={[styles.typeOption, type === 'OWED_TO_ME' && { backgroundColor: theme.primary }]}
+                                style={[styles.typeOption, type === 'OWED_TO_ME' && styles.typeOptionActive]}
                                 onPress={() => setType('OWED_TO_ME')}
                             >
-                                <Text style={[styles.typeText, { color: theme.icon }, type === 'OWED_TO_ME' && { color: '#fff' }]}>Owes me</Text>
+                                <Text style={[styles.typeText, type === 'OWED_TO_ME' && styles.typeTextActive]}>Owes me</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
-                                style={[styles.typeOption, type === 'OWED_BY_ME' && { backgroundColor: theme.primary }]}
+                                style={[styles.typeOption, type === 'OWED_BY_ME' && styles.typeOptionActive]}
                                 onPress={() => setType('OWED_BY_ME')}
                             >
-                                <Text style={[styles.typeText, { color: theme.icon }, type === 'OWED_BY_ME' && { color: '#fff' }]}>I owe</Text>
+                                <Text style={[styles.typeText, type === 'OWED_BY_ME' && styles.typeTextActive]}>I owe</Text>
                             </TouchableOpacity>
                         </View>
 
                         {/* Amount & Description in one row area */}
-                        <View style={[styles.inputRow, { backgroundColor: theme.background }]}>
+                        <View style={styles.inputRow}>
                             <TextInput
-                                style={[styles.amountInput, { color: theme.text }, Platform.OS === 'web' && { outlineStyle: 'none' } as any]}
+                                style={[styles.amountInput, inputOutlineStyle]}
                                 placeholder="0.00"
                                 placeholderTextColor={theme.icon}
                                 keyboardType="numeric"
@@ -199,11 +196,11 @@ export default function AddDebtModal({ visible, onClose, onSuccess }: AddDebtMod
                                 onChangeText={setAmount}
                                 autoFocus
                             />
-                            <Text style={[styles.currency, { color: theme.icon }]}>€</Text>
+                            <Text style={styles.currency}>€</Text>
                         </View>
 
                         <TextInput
-                            style={[styles.input, inputBaseStyle, Platform.OS === 'web' && { outlineStyle: 'none' } as any]}
+                            style={[styles.input, inputOutlineStyle]}
                             placeholder="Description (optional)"
                             placeholderTextColor={theme.icon}
                             value={desc}
@@ -211,7 +208,7 @@ export default function AddDebtModal({ visible, onClose, onSuccess }: AddDebtMod
                         />
 
                         <TouchableOpacity
-                            style={[styles.submitBtn, { backgroundColor: theme.primary }, !amount && { backgroundColor: theme.border }]}
+                            style={[styles.submitBtn, !amount && styles.submitBtnDisabled]}
                             onPress={handleSubmit}
                             disabled={!amount}
                         >
@@ -223,134 +220,3 @@ export default function AddDebtModal({ visible, onClose, onSuccess }: AddDebtMod
         </Modal>
     );
 }
-
-const styles = StyleSheet.create({
-    backdrop: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.6)'
-    },
-    sheet: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        borderTopLeftRadius: 24,
-        borderTopRightRadius: 24,
-        maxHeight: SCREEN_HEIGHT * 0.55,
-        paddingBottom: 34
-    },
-    handleContainer: {
-        alignItems: 'center',
-        paddingVertical: 12
-    },
-    handle: {
-        width: 40,
-        height: 4,
-        borderRadius: 2
-    },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 16,
-        paddingBottom: 14,
-        borderBottomWidth: 1,
-    },
-    headerBtn: {
-        width: 36,
-        justifyContent: 'center',
-        alignItems: 'center'
-    },
-    title: {
-        flex: 1,
-        fontSize: 16,
-        fontWeight: '600',
-        textAlign: 'center'
-    },
-    content: {
-        paddingHorizontal: 16,
-        paddingTop: 16
-    },
-    row: {
-        flexDirection: 'row',
-        gap: 8
-    },
-    input: {
-        flex: 1,
-        paddingHorizontal: 14,
-        paddingVertical: 12,
-        borderRadius: 12,
-        fontSize: 15,
-        borderWidth: 0
-    },
-    addBtn: {
-        paddingHorizontal: 18,
-        justifyContent: 'center',
-        borderRadius: 12
-    },
-    addBtnText: {
-        color: '#fff',
-        fontWeight: '600',
-        fontSize: 14
-    },
-    label: {
-        fontSize: 13,
-        marginBottom: 10,
-        marginTop: 14
-    },
-    peopleScroll: {
-        maxHeight: 180
-    },
-    personItem: {
-        padding: 14,
-        borderRadius: 12,
-        marginBottom: 8
-    },
-    personName: {
-        fontSize: 15
-    },
-    typeToggle: {
-        flexDirection: 'row',
-        borderRadius: 12,
-        padding: 4,
-        marginBottom: 16
-    },
-    typeOption: {
-        flex: 1,
-        paddingVertical: 10,
-        alignItems: 'center',
-        borderRadius: 10
-    },
-    typeText: {
-        fontWeight: '600',
-        fontSize: 14
-    },
-    inputRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        borderRadius: 12,
-        paddingHorizontal: 14,
-        marginBottom: 12
-    },
-    amountInput: {
-        flex: 1,
-        fontSize: 28,
-        fontWeight: '600',
-        paddingVertical: 14,
-        borderWidth: 0
-    },
-    currency: {
-        fontSize: 22,
-        fontWeight: '500'
-    },
-    submitBtn: {
-        padding: 14,
-        borderRadius: 12,
-        alignItems: 'center',
-        marginTop: 8
-    },
-    submitText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '600'
-    }
-});

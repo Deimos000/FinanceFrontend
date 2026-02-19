@@ -19,7 +19,7 @@ const DEV_URL =
 
 export const BACKEND_URL = 'https://financebackend-331581307981.europe-west1.run.app';
 // For production, replace with your Cloud Run URL:
-// export const BACKEND_URL = 'https://your-cloud-run-url.run.app';
+// export const BACKEND_URL = 'http://localhost:5000';
 
 // ── Generic fetch helper ─────────────────────────────────
 
@@ -57,16 +57,21 @@ export const deleteAccount = (accountId: string) =>
 
 // ── Transactions ─────────────────────────────────────────
 
-export const fetchTransactions = (accountId?: string, days?: number) => {
+export const fetchTransactions = (accountId?: string, days?: number, startDate?: string, endDate?: string) => {
     const params = new URLSearchParams();
     if (accountId) params.set('account_id', accountId);
-    if (days) params.set('days', String(days));
+    if (startDate) params.set('start_date', startDate);
+    if (endDate) params.set('end_date', endDate);
+    if (days && !startDate) params.set('days', String(days));
     return api<{ transactions: any[] }>(`/api/transactions?${params}`);
 };
 
-export const fetchDailySpending = (days = 30) =>
+export const fetchUncategorizedTransactions = () =>
+    api<{ transactions: any[] }>('/api/transactions?uncategorized=true&days=90');
+
+export const fetchDailySpending = (startDate: string, endDate: string) =>
     api<{ date: string; amount: number }[]>(
-        `/api/transactions/daily-spending?days=${days}`,
+        `/api/transactions/daily-spending?start_date=${startDate}&end_date=${endDate}`,
     );
 
 export const fetchMonthlyIncome = (months = 6) =>
@@ -80,6 +85,63 @@ export const fetchCategories = () =>
     api<{ name: string; color: string; icon: string; total: number }[]>(
         '/api/categories',
     );
+
+export const createCategory = (category: { name: string; color: string; icon: string }) =>
+    api('/api/categories', {
+        method: 'POST',
+        body: JSON.stringify(category),
+    });
+
+// ── Statistics ───────────────────────────────────────────
+
+export const fetchCategorySpending = (startDate: string, endDate: string) =>
+    api<{ name: string; value: number; color: string; icon: string }[]>(
+        `/api/stats/category-spending?start_date=${startDate}&end_date=${endDate}`
+    );
+
+export const fetchCategoryTrends = (startDate: string, endDate: string) =>
+    api<Record<string, { date: string; amount: number }[]>>
+        (`/api/stats/category-trends?start_date=${startDate}&end_date=${endDate}`
+        );
+
+export const triggerCategorization = () =>
+    api<{ message: string; processed: number; updated: number; details: any }>(
+        '/api/stats/categorize',
+        { method: 'POST' }
+    );
+
+export const fetchMonthlyCashflow = (months = 6) =>
+    api<{ month: string; income: number; spending: number }[]>(
+        `/api/stats/monthly-cashflow?months=${months}`
+    );
+
+// ── Budget ────────────────────────────────────────────────
+
+export const fetchBudgetSettings = () =>
+    api<{ monthly_income: number }>('/api/budget/settings');
+
+export const updateBudgetSettings = (monthly_income: number) =>
+    api('/api/budget/settings', {
+        method: 'PUT',
+        body: JSON.stringify({ monthly_income }),
+    });
+
+export const fetchCategoryBudgets = () =>
+    api<{ name: string; color: string; icon: string; monthly_budget: number }[]>(
+        '/api/budget/categories'
+    );
+
+export const updateCategoryBudget = (categoryName: string, monthly_budget: number) =>
+    api(`/api/budget/categories/${encodeURIComponent(categoryName)}`, {
+        method: 'PUT',
+        body: JSON.stringify({ monthly_budget }),
+    });
+
+export const updateTransactionCategory = (transactionId: string, category: string) =>
+    api(`/api/transactions/${transactionId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ category }),
+    });
 
 // ── Debts ────────────────────────────────────────────────
 

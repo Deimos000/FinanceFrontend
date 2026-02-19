@@ -1,8 +1,9 @@
 import { BankAccount } from '@/hooks/useBankData';
 import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useMemo } from 'react';
+import { Text, TouchableOpacity, View } from 'react-native';
 import { useTheme } from '@/context/ThemeContext';
+import { createAccountCardStyles } from '@/app/styles/components/AccountCard.styles';
 
 interface AccountCardProps {
     account: BankAccount;
@@ -11,28 +12,29 @@ interface AccountCardProps {
 
 export function AccountCard({ account, onPress }: AccountCardProps) {
     const { colors: theme } = useTheme();
+    const styles = useMemo(() => createAccountCardStyles(theme), [theme]);
 
     return (
         <TouchableOpacity
-            style={[styles.card, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}
+            style={styles.card}
             onPress={() => onPress(account)}
         >
             <View style={styles.cardHeader}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                    <View style={[styles.iconContainer, { backgroundColor: theme.background }]}>
+                <View style={styles.headerLeft}>
+                    <View style={styles.iconContainer}>
                         <Ionicons
                             name="business-outline"
                             size={24}
                             color={theme.primary}
                         />
                     </View>
-                    <View>
-                        <Text style={[styles.accountName, { color: theme.text }]}>{account.name}</Text>
-                        <Text style={[styles.iban, { color: theme.icon }]}>{account.bankName} • {account.iban}</Text>
+                    <View style={styles.accountInfo}>
+                        <Text style={styles.accountName}>{account.name}</Text>
+                        <Text style={styles.iban}>{account.bankName} • {account.iban}</Text>
                     </View>
                 </View>
-                <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={[styles.balance, { color: theme.text }]}>
+                <View style={styles.balanceContainer}>
+                    <Text style={styles.balance}>
                         {new Intl.NumberFormat('de-DE', { style: 'currency', currency: account.currency }).format(account.balance)}
                     </Text>
                 </View>
@@ -40,42 +42,3 @@ export function AccountCard({ account, onPress }: AccountCardProps) {
         </TouchableOpacity>
     );
 }
-
-const styles = StyleSheet.create({
-    card: {
-        padding: 20,
-        borderRadius: 16,
-        borderWidth: 1,
-        marginBottom: 10,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
-    },
-    cardHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    iconContainer: {
-        width: 45,
-        height: 45,
-        borderRadius: 25,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    accountName: {
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    iban: {
-        fontSize: 12,
-        marginTop: 2,
-        opacity: 0.7,
-    },
-    balance: {
-        fontSize: 18,
-        fontWeight: '700',
-    },
-});

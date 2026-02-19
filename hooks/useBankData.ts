@@ -16,6 +16,7 @@ export interface Transaction {
     currency: string;
     description: string;
     recipient: string;
+    booking_text?: string;
 }
 
 export interface BankAccount {
@@ -54,6 +55,7 @@ export function useBankData() {
                     currency: t.currency || 'EUR',
                     description: t.description || t.remittance_information || '',
                     recipient: t.recipient || t.creditor_name || t.debtor_name || 'Unknown',
+                    booking_text: t.booking_text,
                 })),
             }));
 
@@ -75,6 +77,7 @@ export function useBankData() {
                             currency: t.currency || 'EUR',
                             description: t.description || '',
                             recipient: t.name || 'Cash',
+                            booking_text: t.booking_text,
                         })),
                     };
 
@@ -86,6 +89,13 @@ export function useBankData() {
             } catch {
                 // Cash account may not exist yet, that's fine
             }
+
+            // Log the result
+            const totalTransactions = fetchedAccounts.reduce((sum, acc) => sum + acc.transactions.length, 0);
+            console.log(`[useBankData] Fetched ${fetchedAccounts.length} accounts with ${totalTransactions} total transactions.`);
+            fetchedAccounts.forEach(acc => {
+                console.log(`[useBankData] Account ${acc.name} (${acc.bankName}): ${acc.transactions.length} transactions`);
+            });
 
             setAccounts(fetchedAccounts);
         } catch (err) {
@@ -116,13 +126,29 @@ export function useBankData() {
     const processCode = async (code: string) => {
         try {
             setLoading(true);
+            setError(null);
+            console.log('[useBankData] processCode called with code prefix:', code.substring(0, 20));
             const data = await bankingSession(code);
-            if (data.accounts) {
+            console.log('[useBankData] bankingSession response:', JSON.stringify(data).substring(0, 500));
+            if (data.accounts && data.accounts.length > 0) {
+                console.log(`[useBankData] Got ${data.accounts.length} accounts, refreshing from server...`);
                 await fetchAccountsFromServer();
+            } else {
+                console.warn('[useBankData] bankingSession returned no accounts');
+                setError('No accounts were returned from the bank. Please try again.');
             }
-        } catch (err) {
+            if ((data as any).errors && (data as any).errors.length > 0) {
+                console.error('[useBankData] Partial errors:', (data as any).errors);
+                setError(`Some accounts had errors: ${(data as any).errors.map((e: any) => e.error).join(', ')}`);
+            }
+        } catch (err: any) {
             console.error('Auth processing failed:', err);
-            setError('Authentication failed');
+            const msg = err?.message || String(err);
+            if (msg.includes('ALREADY_AUTHORIZED')) {
+                setError('This authorization code was already used. Please reconnect your bank to get a new code.');
+            } else {
+                setError(`Authentication failed: ${msg.substring(0, 120)}`);
+            }
         } finally {
             setLoading(false);
         }

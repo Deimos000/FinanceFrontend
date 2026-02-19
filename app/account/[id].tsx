@@ -1,11 +1,12 @@
 import { useLocalSearchParams, Stack } from 'expo-router';
-import { View, Text, StyleSheet, SectionList, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, SectionList, ActivityIndicator } from 'react-native';
 import { useBankData, BankAccount } from '@/hooks/useBankData';
 import { TransactionDetailModal } from '@/components/finance/TransactionDetailModal';
 import { TransactionRow } from '@/components/finance/TransactionRow';
 import { Card } from '@/components/ui/Card';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTheme } from '@/context/ThemeContext';
+import { createAccountDetailsStyles } from '@/app/styles/screens/account-details.styles';
 
 // Helper to group transactions by date
 const groupTransactionsByDate = (transactions: any[]) => {
@@ -40,6 +41,8 @@ const groupTransactionsByDate = (transactions: any[]) => {
 export default function AccountDetailsScreen() {
     const { id } = useLocalSearchParams();
     const { colors: theme } = useTheme();
+    const styles = useMemo(() => createAccountDetailsStyles(theme), [theme]);
+
     const { accounts, loading } = useBankData();
     const [account, setAccount] = useState<BankAccount | undefined>(undefined);
     const [selectedTx, setSelectedTx] = useState<any>(null);
@@ -86,10 +89,11 @@ export default function AccountDetailsScreen() {
                 title: account.name,
                 headerStyle: { backgroundColor: theme.cardBackground },
                 headerTintColor: theme.text,
+                headerShadowVisible: false,
             }} />
 
             <View style={[styles.header, { backgroundColor: theme.cardBackground, borderBottomColor: theme.border }]}>
-                <Text style={[styles.balanceLabel, { color: theme.text }]}>Current Balance</Text>
+                <Text style={[styles.balanceLabel, { color: theme.icon }]}>Current Balance</Text>
                 <Text style={[styles.balanceAmount, { color: theme.text }]}>
                     {new Intl.NumberFormat('de-DE', { style: 'currency', currency: account.currency }).format(account.balance)}
                 </Text>
@@ -104,16 +108,13 @@ export default function AccountDetailsScreen() {
                     <Text style={[styles.sectionHeader, { color: theme.icon }]}>{title}</Text>
                 )}
                 renderItem={({ item, index, section }) => (
-                    <Card style={{
-                        marginBottom: 2,
-                        padding: 0,
-                        borderRadius: 0,
+                    <Card style={[styles.transactionCard, {
                         borderTopLeftRadius: index === 0 ? 12 : 4,
                         borderTopRightRadius: index === 0 ? 12 : 4,
                         borderBottomLeftRadius: index === section.data.length - 1 ? 12 : 4,
                         borderBottomRightRadius: index === section.data.length - 1 ? 12 : 4,
                         backgroundColor: theme.cardBackground
-                    }}>
+                    }]}>
                         <TransactionRow
                             id={item.id}
                             title={item.recipient || 'Unknown'}
@@ -129,8 +130,8 @@ export default function AccountDetailsScreen() {
                 )}
                 stickySectionHeadersEnabled={false}
                 ListEmptyComponent={
-                    <View style={{ padding: 20, alignItems: 'center' }}>
-                        <Text style={{ color: theme.icon }}>No transactions found.</Text>
+                    <View style={styles.emptyState}>
+                        <Text style={[styles.emptyText, { color: theme.icon }]}>No transactions found.</Text>
                     </View>
                 }
             />
@@ -143,38 +144,3 @@ export default function AccountDetailsScreen() {
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    header: {
-        padding: 20,
-        alignItems: 'center',
-        borderBottomWidth: StyleSheet.hairlineWidth,
-    },
-    balanceLabel: {
-        fontSize: 14,
-        opacity: 0.7,
-        marginBottom: 5,
-    },
-    balanceAmount: {
-        fontSize: 32,
-        fontWeight: 'bold',
-        marginBottom: 5,
-    },
-    iban: {
-        fontSize: 14,
-        opacity: 0.5,
-    },
-    sectionHeader: {
-        fontSize: 14,
-        fontWeight: '600',
-        paddingVertical: 10,
-        marginBottom: 5,
-    },
-    listContent: {
-        padding: 20,
-        paddingBottom: 40,
-    },
-});

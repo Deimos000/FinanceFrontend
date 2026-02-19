@@ -62,10 +62,23 @@ export default function FinanceScreen() {
     const handleRefresh = async () => {
         setIsRefreshing(true);
         try {
-            await bankingRefresh(accounts);
+            console.log('[FinanceScreen] Starting sync with accounts:', accounts.map(a => ({ id: a.account_id, name: a.name })));
+            const result: any = await bankingRefresh(accounts);
+            console.log('[FinanceScreen] Sync result:', result);
+            if (result.stats) {
+                console.log('[FinanceScreen] Sync Stats:', JSON.stringify(result.stats, null, 2));
+            }
+            if (result.stats?.new_tx > 0) {
+                alert(`Synced! Added ${result.stats.new_tx} new transactions.`);
+            } else if (result.stats?.errors?.length > 0) {
+                alert(`Sync completed with errors: ${result.stats.errors.join(', ')}`);
+            } else {
+                console.log('[FinanceScreen] No new transactions found.');
+            }
             await loadAccounts();
         } catch (e) {
             console.error('Failed to refresh', e);
+            alert('Failed to sync. Check console for details.');
         } finally {
             setIsRefreshing(false);
         }
@@ -84,8 +97,11 @@ export default function FinanceScreen() {
     return (
         <View style={[styles.container, { backgroundColor: theme.background }]}>
             <View style={[styles.header, { backgroundColor: theme.cardBackground, borderBottomColor: theme.border }]}>
-                <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center' }}>
-                    <TouchableOpacity onPress={handleRefresh} disabled={isRefreshing}>
+                <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: 8 }}>
+                    <Text style={{ color: theme.icon, fontSize: 12 }}>
+                        {isRefreshing ? 'Syncing...' : 'Sync Data'}
+                    </Text>
+                    <TouchableOpacity onPress={handleRefresh} disabled={isRefreshing} style={{ backgroundColor: theme.cardBackground, padding: 8, borderRadius: 20 }}>
                         {isRefreshing ? (
                             <ActivityIndicator size="small" color={theme.primary} />
                         ) : (
@@ -136,6 +152,21 @@ export default function FinanceScreen() {
                                 <Text style={[styles.addButtonText, { color: theme.primary }]}>Add Cash Account</Text>
                             </TouchableOpacity>
                         )}
+
+                        <TouchableOpacity
+                            style={[styles.addButton, { backgroundColor: theme.primary, borderColor: theme.primary, marginTop: 20 }]}
+                            onPress={handleRefresh}
+                            disabled={isRefreshing}
+                        >
+                            {isRefreshing ? (
+                                <ActivityIndicator size="small" color="#FFFFFF" />
+                            ) : (
+                                <Ionicons name="sync" size={24} color="#FFFFFF" />
+                            )}
+                            <Text style={[styles.addButtonText, { color: '#FFFFFF' }]}>
+                                {isRefreshing ? 'Syncing Data...' : 'Sync All Accounts'}
+                            </Text>
+                        </TouchableOpacity>
                     </>
                 )}
             </ScrollView>
@@ -159,6 +190,7 @@ const styles = StyleSheet.create({
     },
     content: {
         padding: 20,
+        paddingBottom: 120, // Ensure content clears tab bar
         gap: 15,
     },
     card: {

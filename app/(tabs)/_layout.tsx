@@ -4,37 +4,42 @@ import { Tabs } from 'expo-router';
 import React from 'react';
 import { Platform, StyleSheet, View, Text } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
+import { useIsDesktop } from '@/hooks/useIsDesktop';
+import DesktopSidebar from '@/components/DesktopSidebar';
 
 export default function TabLayout() {
   const { colors, theme } = useTheme();
+  const isDesktop = useIsDesktop();
 
-  return (
+  const tabs = (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: '#FFFFFF',
         tabBarInactiveTintColor: 'rgba(255, 255, 255, 0.6)',
         headerShown: false,
-        tabBarShowLabel: true,
-        tabBarStyle: {
-          backgroundColor: '#4B0082', // Deep Persian Indigo
-          borderTopWidth: 0,
-          elevation: 0,
-          height: Platform.OS === 'ios' ? 105 : 85, // Maintained "Bigger" request
-          paddingBottom: Platform.OS === 'ios' ? 35 : 20,
-          paddingTop: 15,
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          borderTopLeftRadius: 30,
-          borderTopRightRadius: 30,
-          ...(Platform.OS !== 'web' && {
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: -2 },
-            shadowOpacity: 0.15,
-            shadowRadius: 10,
-          }),
-        },
+        tabBarShowLabel: !isDesktop,
+        tabBarStyle: isDesktop
+          ? { display: 'none' as const }
+          : {
+            backgroundColor: '#4B0082',
+            borderTopWidth: 0,
+            elevation: 0,
+            height: Platform.OS === 'ios' ? 105 : 85,
+            paddingBottom: Platform.OS === 'ios' ? 35 : 20,
+            paddingTop: 15,
+            position: 'absolute' as const,
+            bottom: 0,
+            left: 0,
+            right: 0,
+            borderTopLeftRadius: 30,
+            borderTopRightRadius: 30,
+            ...(Platform.OS !== 'web' && {
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: -2 },
+              shadowOpacity: 0.15,
+              shadowRadius: 10,
+            }),
+          },
         tabBarItemStyle: {
           paddingVertical: 6,
         },
@@ -134,9 +139,28 @@ export default function TabLayout() {
       />
     </Tabs>
   );
+
+  if (isDesktop) {
+    return (
+      <View style={styles.desktopRoot}>
+        <DesktopSidebar />
+        <View style={styles.desktopContent}>{tabs}</View>
+      </View>
+    );
+  }
+
+  return tabs;
 }
 
 const styles = StyleSheet.create({
+  desktopRoot: {
+    flexDirection: 'row',
+    flex: 1,
+    height: '100%' as any,
+  },
+  desktopContent: {
+    flex: 1,
+  },
   iconContainer: {
     padding: 8,
     borderRadius: 24,

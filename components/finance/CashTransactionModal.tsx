@@ -1,9 +1,9 @@
-
 import { Colors } from '@/constants/Colors';
 import { addCashTransaction } from '@/utils/api';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from 'react';
-import { Keyboard, Modal, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, useColorScheme, View } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import { Keyboard, Modal, Pressable, Text, TextInput, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { createCashTransactionModalStyles } from '@/app/styles/components/CashTransactionModal.styles';
 
 interface CashTransactionModalProps {
     visible: boolean;
@@ -14,6 +14,8 @@ interface CashTransactionModalProps {
 export function CashTransactionModal({ visible, onClose, onSave }: CashTransactionModalProps) {
     const colorScheme = useColorScheme();
     const theme = Colors[colorScheme ?? 'light'];
+    const styles = useMemo(() => createCashTransactionModalStyles(theme), [theme]);
+
     const [amount, setAmount] = useState('');
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
@@ -45,26 +47,26 @@ export function CashTransactionModal({ visible, onClose, onSave }: CashTransacti
         <Modal visible={visible} animationType="slide" transparent>
             <Pressable onPress={Keyboard.dismiss} style={styles.overlay}>
                 <Pressable
-                    style={[styles.container, { backgroundColor: theme.cardBackground }]}
+                    style={styles.container}
                     onPress={(e) => e.stopPropagation()}
                 >
                     <View style={styles.header}>
-                        <Text style={[styles.title, { color: theme.text }]}>Add Transaction</Text>
+                        <Text style={styles.title}>Add Transaction</Text>
                         <TouchableOpacity onPress={onClose}>
                             <Ionicons name="close" size={24} color={theme.icon} />
                         </TouchableOpacity>
                     </View>
 
                     {/* Type Switcher */}
-                    <View style={[styles.segmentContainer, { backgroundColor: theme.background }]}>
+                    <View style={styles.segmentContainer}>
                         <TouchableOpacity
-                            style={[styles.segment, type === 'expense' && { backgroundColor: theme.cardBackground, shadowOpacity: 0.1 }]}
+                            style={[styles.segment, type === 'expense' && styles.segmentActive]}
                             onPress={() => setType('expense')}
                         >
                             <Text style={[styles.segmentText, { color: type === 'expense' ? 'red' : theme.icon }]}>Expense</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                            style={[styles.segment, type === 'income' && { backgroundColor: theme.cardBackground, shadowOpacity: 0.1 }]}
+                            style={[styles.segment, type === 'income' && styles.segmentActive]}
                             onPress={() => setType('income')}
                         >
                             <Text style={[styles.segmentText, { color: type === 'income' ? 'green' : theme.icon }]}>Income</Text>
@@ -72,9 +74,9 @@ export function CashTransactionModal({ visible, onClose, onSave }: CashTransacti
                     </View>
 
                     {/* Name Input */}
-                    <Text style={[styles.label, { color: theme.text }]}>Name (Optional)</Text>
+                    <Text style={styles.label}>Name (Optional)</Text>
                     <TextInput
-                        style={[styles.input, { color: theme.text, backgroundColor: theme.background, borderColor: theme.border }]}
+                        style={styles.input}
                         placeholder="e.g. Lunch, Taxi"
                         placeholderTextColor={theme.icon}
                         value={name}
@@ -82,9 +84,9 @@ export function CashTransactionModal({ visible, onClose, onSave }: CashTransacti
                     />
 
                     {/* Amount Input */}
-                    <Text style={[styles.label, { color: theme.text }]}>Amount</Text>
+                    <Text style={styles.label}>Amount</Text>
                     <TextInput
-                        style={[styles.input, { color: theme.text, backgroundColor: theme.background, borderColor: theme.border }]}
+                        style={styles.input}
                         placeholder="0.00"
                         placeholderTextColor={theme.icon}
                         keyboardType="decimal-pad"
@@ -94,9 +96,9 @@ export function CashTransactionModal({ visible, onClose, onSave }: CashTransacti
                     />
 
                     {/* Description Input */}
-                    <Text style={[styles.label, { color: theme.text }]}>Description (Optional)</Text>
+                    <Text style={styles.label}>Description (Optional)</Text>
                     <TextInput
-                        style={[styles.input, { color: theme.text, backgroundColor: theme.background, borderColor: theme.border }]}
+                        style={styles.input}
                         placeholder="e.g. delicious burger"
                         placeholderTextColor={theme.icon}
                         value={description}
@@ -104,7 +106,7 @@ export function CashTransactionModal({ visible, onClose, onSave }: CashTransacti
                     />
 
                     <TouchableOpacity
-                        style={[styles.saveButton, { backgroundColor: theme.primary, opacity: !amount ? 0.5 : 1 }]}
+                        style={[styles.saveButton, { opacity: !amount ? 0.5 : 1 }]}
                         onPress={handleSave}
                         disabled={!amount}
                     >
@@ -115,66 +117,3 @@ export function CashTransactionModal({ visible, onClose, onSave }: CashTransacti
         </Modal>
     );
 }
-
-const styles = StyleSheet.create({
-    overlay: {
-        flex: 1,
-        justifyContent: 'flex-end',
-        backgroundColor: 'rgba(0,0,0,0.5)',
-    },
-    container: {
-        borderTopLeftRadius: 24,
-        borderTopRightRadius: 24,
-        padding: 24,
-        paddingBottom: 40,
-    },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 20,
-    },
-    title: {
-        fontSize: 20,
-        fontWeight: '700',
-    },
-    segmentContainer: {
-        flexDirection: 'row',
-        padding: 4,
-        borderRadius: 12,
-        marginBottom: 20,
-    },
-    segment: {
-        flex: 1,
-        paddingVertical: 10,
-        alignItems: 'center',
-        borderRadius: 10,
-    },
-    segmentText: {
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    label: {
-        fontSize: 14,
-        fontWeight: '600',
-        marginBottom: 8,
-    },
-    input: {
-        fontSize: 18,
-        padding: 16,
-        borderRadius: 12,
-        borderWidth: 1,
-        marginBottom: 20,
-    },
-    saveButton: {
-        padding: 18,
-        borderRadius: 16,
-        alignItems: 'center',
-        marginTop: 10,
-    },
-    saveButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '700',
-    }
-});
