@@ -104,7 +104,8 @@ export async function POST(request: Request) {
             console.error('Enable Banking API Error:', response.status, responseText);
             return Response.json({
                 error: `Enable Banking API returned ${response.status}`,
-                details: responseText
+                details: responseText,
+                debug: { redirectUrl, appId: APP_ID ? 'Configured' : 'Missing' }
             }, { status: response.status });
         }
 

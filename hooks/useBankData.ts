@@ -154,6 +154,8 @@ export function useBankData() {
                 // For now, let's leave it undefined to let backend decide, or set a mobile-specific one if known.
             }
 
+            console.log('[connectBank] Initiating auth with redirectUrl:', redirectUrl);
+
             const data = await bankingAuthUrl(bankName, country, redirectUrl);
             if (data.url) {
                 if (Platform.OS === 'web') {
@@ -165,9 +167,11 @@ export function useBankData() {
             } else {
                 setError('Failed to get auth URL');
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error('Connection failed:', err);
-            setError('Connection failed');
+            // If the backend sent back the debug info, show it
+            const debugInfo = err?.message && err.message.includes('API 400') ? 'Check console for Redirect URI mismatch' : '';
+            setError(`Connection failed: ${err.message || 'Unknown error'}. ${debugInfo}`);
         } finally {
             setLoading(false);
         }
