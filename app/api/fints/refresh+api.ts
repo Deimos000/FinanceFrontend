@@ -1,6 +1,6 @@
 
 import { SignJWT, importPKCS8 } from 'jose';
-import { saveTransaction, saveAccount } from '../db+api';
+import { saveTransaction, saveAccount, saveTransactionsBatch } from '../db+api';
 
 const PRIVATE_KEY = `-----BEGIN PRIVATE KEY-----
 MIIJQgIBADANBgkqhkiG9w0BAQEFAASCCSwwggkoAgEAAoICAQDOM/tYJq+XGRU7
@@ -168,7 +168,10 @@ export async function POST(request: Request) {
 
                         // Save to DB
                         if (acc.transactions) {
-                            acc.transactions.forEach((t: any) => saveTransaction(t, acc.account_id || acc.uid));
+                            // Save to DB in batch
+                            if (acc.transactions && acc.transactions.length > 0) {
+                                saveTransactionsBatch(acc.transactions, acc.account_id || acc.uid);
+                            }
                         }
                     }
                 } else {

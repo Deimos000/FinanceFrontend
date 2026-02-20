@@ -157,7 +157,21 @@ export const getAccounts = () => {
 
 export const saveTransaction = (t: any, accountId: string) => {
     const db = readDb();
+    const transactionData = processTransaction(t, accountId);
 
+    // Upsert
+    const index = db.transactions.findIndex((tr: any) => tr.transaction_id === transactionData.transaction_id);
+    if (index >= 0) {
+        db.transactions[index] = transactionData;
+    } else {
+        db.transactions.push(transactionData);
+    }
+
+    writeDb(db);
+};
+
+// Internal helper to process a single transaction object
+const processTransaction = (t: any, accountId: string) => {
     // Parse amount safely
     let amount = 0;
     if (t.transaction_amount?.amount) amount = parseFloat(t.transaction_amount.amount);
@@ -193,29 +207,34 @@ export const saveTransaction = (t: any, accountId: string) => {
     if (!transactionData.creditor_name && !transactionData.debtor_name && transactionData.remittance_information) {
         const sentFromMatch = transactionData.remittance_information.match(/^(.*?) Sent from/i);
         if (sentFromMatch && sentFromMatch[1]) {
-            // Assume creditor if amount < 0 (we sent to them), but actually usually 'Sent from' implies source.
-            // If amount > 0 (incoming), 'Sent from' is the sender (creditor).
-            // If amount < 0 (outgoing), 'Sent from' might be... us? 
-            // "Denis Sent from N26" usually appears on the receiver side (incoming).
-            if (amount > 0) {
-                transactionData.creditor_name = sentFromMatch[1].trim();
-            } else {
-                // If invalid/outgoing, maybe it's just the beneficiary name at start?
-                // Let's stick to the user's specific case which seems to be incoming/transfer.
-                transactionData.creditor_name = sentFromMatch[1].trim();
-            }
+            transactionData.creditor_name = sentFromMatch[1].trim();
         }
     }
 
-    // Upsert
-    const index = db.transactions.findIndex((tr: any) => tr.transaction_id === stableId);
-    if (index >= 0) {
-        db.transactions[index] = transactionData;
-    } else {
-        db.transactions.push(transactionData);
-    }
-
-    writeDb(db);
+    return transactionData;
 };
 
-export default { saveAccount, getAccounts, saveTransaction };
+export const saveTransactionsBatch = (transactions: any[], accountId: string) => {
+    console.log(`[db+api] Saving batch of ${transactions.length} transactions for account ${accountId}`);
+    const db = readDb();
+    let newCount = 0;
+    let updateCount = 0;
+
+    transactions.forEach(t => {
+        const transactionData = processTransaction(t, accountId);
+        const index = db.transactions.findIndex((tr: any) => tr.transaction_id === transactionData.transaction_id);
+
+        if (index >= 0) {
+            db.transactions[index] = transactionData;
+            updateCount++;
+        } else {
+            db.transactions.push(transactionData);
+            newCount++;
+        }
+    });
+
+    writeDb(db);
+    console.log(`[db+api] Batch save complete. New: ${newCount}, Updated: ${updateCount}`);
+};
+
+export default { saveAccount, getAccounts, saveTransaction, saveTransactionsBatch };

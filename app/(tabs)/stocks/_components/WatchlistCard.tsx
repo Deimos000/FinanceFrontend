@@ -41,7 +41,7 @@ export const WatchlistCard = ({ item, onPress, style }: { item: WishlistItem; on
     if (!stock) {
         return (
             <TouchableOpacity
-                style={[styles.card, { backgroundColor: theme.cardBackground, borderColor: theme.border }, style]}
+                style={[styles.card, { backgroundColor: '#000000', borderColor: theme.border }, style]}
                 onPress={onPress}
             >
                 <View style={styles.topRow}>
@@ -64,7 +64,7 @@ export const WatchlistCard = ({ item, onPress, style }: { item: WishlistItem; on
 
     return (
         <TouchableOpacity
-            style={[styles.card, { backgroundColor: theme.cardBackground, borderColor: theme.border }, style]}
+            style={[styles.card, { backgroundColor: '#000000', borderColor: theme.border }, style]}
             onPress={onPress}
         >
             <View style={styles.topRow}>
@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         padding: 12,
         marginBottom: 10,
-        borderWidth: 1,
+        // borderWidth: 1, // Removed to match Market Movers
         justifyContent: 'space-between'
     },
     topRow: {

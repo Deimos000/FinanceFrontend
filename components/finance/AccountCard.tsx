@@ -8,9 +8,10 @@ import { createAccountCardStyles } from '@/app/styles/components/AccountCard.sty
 interface AccountCardProps {
     account: BankAccount;
     onPress: (account: BankAccount) => void;
+    onDelete?: (account: BankAccount) => void;
 }
 
-export function AccountCard({ account, onPress }: AccountCardProps) {
+export function AccountCard({ account, onPress, onDelete }: AccountCardProps) {
     const { colors: theme } = useTheme();
     const styles = useMemo(() => createAccountCardStyles(theme), [theme]);
 
@@ -18,6 +19,7 @@ export function AccountCard({ account, onPress }: AccountCardProps) {
         <TouchableOpacity
             style={styles.card}
             onPress={() => onPress(account)}
+            activeOpacity={0.75}
         >
             <View style={styles.cardHeader}>
                 <View style={styles.headerLeft}>
@@ -33,10 +35,25 @@ export function AccountCard({ account, onPress }: AccountCardProps) {
                         <Text style={styles.iban}>{account.bankName} • {account.iban}</Text>
                     </View>
                 </View>
-                <View style={styles.balanceContainer}>
-                    <Text style={styles.balance}>
-                        {new Intl.NumberFormat('de-DE', { style: 'currency', currency: account.currency }).format(account.balance)}
-                    </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                    <View style={styles.balanceContainer}>
+                        <Text style={styles.balance}>
+                            {new Intl.NumberFormat('de-DE', { style: 'currency', currency: account.currency }).format(account.balance)}
+                        </Text>
+                    </View>
+                    {onDelete && (
+                        <TouchableOpacity
+                            onPress={(e) => { e.stopPropagation?.(); onDelete(account); }}
+                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                            style={{
+                                width: 30, height: 30, borderRadius: 8,
+                                backgroundColor: theme.danger + '20',
+                                alignItems: 'center', justifyContent: 'center',
+                            }}
+                        >
+                            <Ionicons name="trash-outline" size={15} color={theme.danger} />
+                        </TouchableOpacity>
+                    )}
                 </View>
             </View>
         </TouchableOpacity>

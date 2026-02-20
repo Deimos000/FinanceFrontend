@@ -21,7 +21,7 @@ export default function TabLayout() {
         tabBarStyle: isDesktop
           ? { display: 'none' as const }
           : {
-            backgroundColor: '#4B0082',
+            backgroundColor: colors.cardBackground,
             borderTopWidth: 0,
             elevation: 0,
             height: Platform.OS === 'ios' ? 105 : 85,
@@ -50,10 +50,8 @@ export default function TabLayout() {
         },
         tabBarBackground: () => (
           Platform.OS === 'ios' ? (
-            <BlurView
-              intensity={90}
-              style={[StyleSheet.absoluteFill, { borderTopLeftRadius: 30, borderTopRightRadius: 30, overflow: 'hidden', backgroundColor: '#4B0082' }]}
-              tint="dark"
+            <View
+              style={[StyleSheet.absoluteFill, { borderTopLeftRadius: 30, borderTopRightRadius: 30, overflow: 'hidden', backgroundColor: colors.cardBackground }]}
             />
           ) : null
         ),
@@ -64,7 +62,7 @@ export default function TabLayout() {
           title: 'Home',
           tabBarIcon: ({ color, focused }) => (
             <View style={[styles.iconContainer, focused && styles.iconContainerFocused]}>
-              <Ionicons name={focused ? 'home' : 'home-outline'} size={24} color={focused ? '#4B0082' : color} />
+              <Ionicons name={focused ? 'home' : 'home-outline'} size={24} color={focused ? colors.primary : color} />
             </View>
           ),
         }}
@@ -75,7 +73,7 @@ export default function TabLayout() {
           title: 'Debts',
           tabBarIcon: ({ color, focused }) => (
             <View style={[styles.iconContainer, focused && styles.iconContainerFocused]}>
-              <Ionicons name={focused ? 'people' : 'people-outline'} size={24} color={focused ? '#4B0082' : color} />
+              <Ionicons name={focused ? 'people' : 'people-outline'} size={24} color={focused ? colors.primary : color} />
             </View>
           ),
         }}
@@ -86,7 +84,7 @@ export default function TabLayout() {
           title: 'Stocks',
           tabBarIcon: ({ color, focused }) => (
             <View style={[styles.iconContainer, focused && styles.iconContainerFocused]}>
-              <Ionicons name={focused ? 'trending-up' : 'trending-up-outline'} size={24} color={focused ? '#4B0082' : color} />
+              <Ionicons name={focused ? 'trending-up' : 'trending-up-outline'} size={24} color={focused ? colors.primary : color} />
             </View>
           ),
         }}
@@ -97,7 +95,7 @@ export default function TabLayout() {
           title: 'Stats',
           tabBarIcon: ({ color, focused }) => (
             <View style={[styles.iconContainer, focused && styles.iconContainerFocused]}>
-              <Ionicons name={focused ? 'bar-chart' : 'bar-chart-outline'} size={24} color={focused ? '#4B0082' : color} />
+              <Ionicons name={focused ? 'bar-chart' : 'bar-chart-outline'} size={24} color={focused ? colors.primary : color} />
             </View>
           ),
         }}
@@ -108,7 +106,7 @@ export default function TabLayout() {
           title: 'Accounts',
           tabBarIcon: ({ color, focused }) => (
             <View style={[styles.iconContainer, focused && styles.iconContainerFocused]}>
-              <Ionicons name={focused ? 'wallet' : 'wallet-outline'} size={24} color={focused ? '#4B0082' : color} />
+              <Ionicons name={focused ? 'wallet' : 'wallet-outline'} size={24} color={focused ? colors.primary : color} />
             </View>
           ),
         }}
@@ -119,7 +117,7 @@ export default function TabLayout() {
           title: 'Profile',
           tabBarIcon: ({ color, focused }) => (
             <View style={[styles.iconContainer, focused && styles.iconContainerFocused]}>
-              <Ionicons name={focused ? 'person' : 'person-outline'} size={24} color={focused ? '#4B0082' : color} />
+              <Ionicons name={focused ? 'person' : 'person-outline'} size={24} color={focused ? colors.primary : color} />
             </View>
           ),
         }}
@@ -137,7 +135,7 @@ export default function TabLayout() {
           href: null,
         }}
       />
-    </Tabs>
+    </Tabs >
   );
 
   if (isDesktop) {

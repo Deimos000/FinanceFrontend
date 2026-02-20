@@ -213,10 +213,15 @@ export const addCashTransaction = (tx: {
 
 // ── Banking (Enable Banking) ─────────────────────────────
 
-export const bankingAuthUrl = (bankName: string) =>
+export const bankingSearchBanks = (query: string, country = 'DE') =>
+    api<{ banks: { name: string; country: string; logo?: string; bic?: string }[] }>(
+        `/api/banking/search-banks?query=${encodeURIComponent(query)}&country=${encodeURIComponent(country)}`
+    );
+
+export const bankingAuthUrl = (bankName: string, country = 'DE', redirectUrl?: string) =>
     api<{ url: string }>('/api/banking/auth-url', {
         method: 'POST',
-        body: JSON.stringify({ bankName }),
+        body: JSON.stringify({ bankName, country, redirectUrl }),
     });
 
 export const bankingSession = (code: string) =>
@@ -230,6 +235,7 @@ export const bankingRefresh = (accounts: any[]) =>
         method: 'POST',
         body: JSON.stringify({ accounts }),
     });
+
 
 // ── Yahoo Finance Proxy ──────────────────────────────────
 

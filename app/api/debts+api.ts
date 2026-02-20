@@ -8,36 +8,40 @@ export async function GET(req: ExpoRequest) {
 
     try {
         if (type === 'summary') {
-            // Get all people with their aggregated net balance
+            // Get all people
             const people = await db.getAllAsync('SELECT * FROM names ORDER BY name');
 
-            const summaries = await Promise.all(people.map(async (person: any) => {
-                const debts = await db.getAllAsync('SELECT * FROM debts WHERE person_id = ?', [person.id]);
+            // Get all debts with paid amounts in ONE query
+            const debts = await db.getAllAsync<{ person_id: number, type: string, amount: number, paid: number }>(`
+                SELECT 
+                    d.person_id, 
+                    d.type, 
+                    d.amount, 
+                    COALESCE(SUM(sd.amount), 0) as paid
+                FROM debts d
+                LEFT JOIN sub_debts sd ON d.id = sd.debt_id
+                GROUP BY d.id
+            `);
 
-                let netBalance = 0;
+            // Aggregate in memory (O(N) operation)
+            const peopleMap = new Map();
+            people.forEach((p: any) => {
+                peopleMap.set(p.id, { ...p, netBalance: 0 });
+            });
 
-                for (const debt of debts as any[]) {
-                    const subDebtsSum = await db.getFirstAsync<{ total: number }>(
-                        'SELECT SUM(amount) as total FROM sub_debts WHERE debt_id = ?',
-                        [debt.id]
-                    );
-                    const payedAmount = subDebtsSum?.total || 0;
-                    const remaining = debt.amount - payedAmount;
-
-                    if (debt.type === 'OWED_TO_ME') {
-                        netBalance += remaining;
+            debts.forEach(d => {
+                const person = peopleMap.get(d.person_id);
+                if (person) {
+                    const remaining = d.amount - d.paid;
+                    if (d.type === 'OWED_TO_ME') {
+                        person.netBalance += remaining;
                     } else { // OWED_BY_ME
-                        netBalance -= remaining;
+                        person.netBalance -= remaining;
                     }
                 }
+            });
 
-                return {
-                    ...person,
-                    netBalance
-                };
-            }));
-
-            return Response.json(summaries);
+            return Response.json(Array.from(peopleMap.values()));
         }
 
         if (type === 'list') {
@@ -60,23 +64,21 @@ export async function GET(req: ExpoRequest) {
 
             const debts = await db.getAllAsync(query, args);
 
-            const debtsWithBalance = await Promise.all((debts as any[]).map(async (debt) => {
-                const subDebtsSum = await db.getFirstAsync<{ total: number }>(
-                    'SELECT SUM(amount) as total FROM sub_debts WHERE debt_id = ?',
-                    [debt.id]
-                );
-                const payed = subDebtsSum?.total || 0;
-                const subDebts = await db.getAllAsync(
-                    'SELECT * FROM sub_debts WHERE debt_id = ? ORDER BY created_at DESC',
-                    [debt.id]
-                );
+            // Fetch ALL sub-debts in one go
+            const allSubDebts = await db.getAllAsync('SELECT * FROM sub_debts ORDER BY created_at DESC');
+
+            // Map sub-debts to debts
+            const debtsWithBalance = debts.map((debt: any) => {
+                const mySubDebts = (allSubDebts as any[]).filter(sd => sd.debt_id === debt.id);
+                const payed = mySubDebts.reduce((sum, sd) => sum + sd.amount, 0);
+
                 return {
                     ...debt,
                     paid_amount: payed,
                     remaining_amount: debt.amount - payed,
-                    sub_debts: subDebts
+                    sub_debts: mySubDebts
                 };
-            }));
+            });
 
             return Response.json(debtsWithBalance);
         }

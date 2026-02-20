@@ -21,16 +21,16 @@ export const Colors = {
     },
     dark: {
         text: '#FFFFFF',
-        background: '#000000',
-        tint: persianIndigo,
-        icon: '#8e8e93',
-        tabIconDefault: '#8e8e93',
-        tabIconSelected: persianIndigo,
-        cardBackground: '#1C1C1E',
-        primary: persianIndigo,
+        background: '#000000', // Pitch Black
+        tint: '#fff',
+        icon: '#9BA1A6',
+        tabIconDefault: '#9BA1A6',
+        tabIconSelected: '#fff',
+        cardBackground: '#1a0b2e', // Dark Purple Card
+        primary: '#4B0082', // Persian Indigo
         secondary: '#32D74B',
-        accent: persianIndigo,
-        border: '#38383A',
+        accent: '#4B0082', // Persian Indigo
+        border: '#2A2A2D',
         danger: '#FF453A',
     },
 };

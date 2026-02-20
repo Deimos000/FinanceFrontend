@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import {
@@ -7,6 +7,8 @@ import {
     bankingAuthUrl,
     bankingSession,
     bankingRefresh,
+    bankingSearchBanks,
+    deleteAccount as apiDeleteAccount,
 } from '@/utils/api';
 
 export interface Transaction {
@@ -29,17 +31,28 @@ export interface BankAccount {
     transactions: Transaction[];
 }
 
+export interface BankResult {
+    name: string;
+    country: string;
+    logo?: string;
+    bic?: string;
+}
+
 export function useBankData() {
     const [accounts, setAccounts] = useState<BankAccount[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    // Bank search state
+    const [bankResults, setBankResults] = useState<BankResult[]>([]);
+    const [bankSearchLoading, setBankSearchLoading] = useState(false);
+    const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const fetchAccountsFromServer = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
 
-            // Fetch bank accounts from Flask backend
             const data = await apiFetchAccounts();
             let fetchedAccounts: BankAccount[] = (data.accounts || []).map((acc: any) => ({
                 id: acc.account_id || acc.id,
@@ -59,7 +72,6 @@ export function useBankData() {
                 })),
             }));
 
-            // Fetch cash account separately & merge
             try {
                 const cashAcc = await fetchCashAccount();
                 if (cashAcc) {
@@ -81,21 +93,16 @@ export function useBankData() {
                         })),
                     };
 
-                    // Only add if not already present
                     if (!fetchedAccounts.find(a => a.id === 'CASH_ACCOUNT')) {
                         fetchedAccounts.push(cashMapped);
                     }
                 }
             } catch {
-                // Cash account may not exist yet, that's fine
+                // Cash account may not exist yet
             }
 
-            // Log the result
             const totalTransactions = fetchedAccounts.reduce((sum, acc) => sum + acc.transactions.length, 0);
             console.log(`[useBankData] Fetched ${fetchedAccounts.length} accounts with ${totalTransactions} total transactions.`);
-            fetchedAccounts.forEach(acc => {
-                console.log(`[useBankData] Account ${acc.name} (${acc.bankName}): ${acc.transactions.length} transactions`);
-            });
 
             setAccounts(fetchedAccounts);
         } catch (err) {
@@ -106,12 +113,55 @@ export function useBankData() {
         }
     }, []);
 
-    const connectBank = async (bankName: string) => {
+    /** Debounced bank search — clears results if query is empty */
+    const searchBanks = useCallback((query: string, country = 'DE') => {
+        if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+
+        if (!query.trim()) {
+            setBankResults([]);
+            return;
+        }
+
+        setBankSearchLoading(true);
+        searchDebounceRef.current = setTimeout(async () => {
+            try {
+                const data = await bankingSearchBanks(query.trim(), country);
+                setBankResults(data.banks || []);
+            } catch (err) {
+                console.error('[useBankData] Bank search failed:', err);
+                setBankResults([]);
+            } finally {
+                setBankSearchLoading(false);
+            }
+        }, 350);
+    }, []);
+
+    /** Connect a bank by ASPSP name. On web, same-tab redirect; on native, opens browser. */
+    const connectBank = async (bankName: string, country = 'DE') => {
         try {
             setLoading(true);
-            const data = await bankingAuthUrl(bankName);
+
+            // Determine redirect URL
+            let redirectUrl: string | undefined;
+            if (Platform.OS === 'web') {
+                // Use the current page URL (without query params) as the redirect target
+                // ensure we remove any existing ?code= or other params to avoid confusion
+                redirectUrl = window.location.origin + window.location.pathname;
+            } else {
+                // For mobile, we'd typically use a custom scheme or deep link.
+                // If not set, the backend default (localhost) or .env value will be used.
+                // You might use Linking.createURL('/accounts') here if using Expo Linking.
+                // For now, let's leave it undefined to let backend decide, or set a mobile-specific one if known.
+            }
+
+            const data = await bankingAuthUrl(bankName, country, redirectUrl);
             if (data.url) {
-                await WebBrowser.openBrowserAsync(data.url);
+                if (Platform.OS === 'web') {
+                    // Same-tab redirect – the ?code= handler in useEffect will process the return
+                    window.location.href = data.url;
+                } else {
+                    await WebBrowser.openBrowserAsync(data.url);
+                }
             } else {
                 setError('Failed to get auth URL');
             }
@@ -186,6 +236,19 @@ export function useBankData() {
         }
     };
 
+    const removeAccount = async (accountId: string) => {
+        try {
+            setLoading(true);
+            await apiDeleteAccount(accountId);
+            await fetchAccountsFromServer();
+        } catch (e) {
+            console.error('[useBankData] Delete error:', e);
+            setError('Failed to delete account.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return {
         accounts,
         loading,
@@ -193,5 +256,9 @@ export function useBankData() {
         refreshAccounts,
         connectBank,
         processCode,
+        searchBanks,
+        bankResults,
+        bankSearchLoading,
+        removeAccount,
     };
 }

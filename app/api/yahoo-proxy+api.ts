@@ -9,6 +9,8 @@ const USER_AGENTS = [
 
 const getRandomUserAgent = () => USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
 
+const CACHE: Record<string, { data: any, timestamp: number }> = {};
+
 export async function GET(request: Request) {
     const url = new URL(request.url);
     const type = url.searchParams.get('type') || 'quote';
@@ -24,12 +26,16 @@ export async function GET(request: Request) {
 
     try {
         let targetUrl = '';
+        let cacheKey = '';
+        let ttl = 60 * 1000; // Default 1 minute
 
         if (type === 'search') {
             if (!query) {
                 return Response.json({ error: 'Query param required for search' }, { status: 400, headers });
             }
             targetUrl = `https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(query)}&quotesCount=10&newsCount=0`;
+            cacheKey = `search:${query}`;
+            ttl = 60 * 60 * 1000; // Cache searches for 1 hour
         } else {
             if (!symbol) {
                 return Response.json({ error: 'Symbol param required for quote' }, { status: 400, headers });
@@ -37,6 +43,19 @@ export async function GET(request: Request) {
             const interval = url.searchParams.get('interval') || '1d';
             const range = url.searchParams.get('range') || '1y';
             targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=${interval}&range=${range}`;
+            cacheKey = `chart:${symbol}:${interval}:${range}`;
+
+            // Cache charts longer
+            if (interval === '1d' || interval === '1wk' || interval === '1mo') {
+                ttl = 15 * 60 * 1000; // 15 mins for daily+ keys
+            }
+        }
+
+        // Check Cache
+        const cached = CACHE[cacheKey];
+        if (cached && (Date.now() - cached.timestamp < ttl)) {
+            // console.log(`[Yahoo Proxy] Serving from cache: ${cacheKey}`);
+            return Response.json(cached.data, { status: 200, headers });
         }
 
         const response = await fetch(targetUrl, {
@@ -64,6 +83,13 @@ export async function GET(request: Request) {
         }
 
         const data = await response.json();
+
+        // Save to Cache
+        CACHE[cacheKey] = {
+            data,
+            timestamp: Date.now()
+        };
+
         return Response.json(data, { status: 200, headers });
 
     } catch (error: any) {

@@ -55,12 +55,18 @@ SqIKLENg196UJCofV3Utat2bo7EqdQ==
 -----END PRIVATE KEY-----`;
 
 const APP_ID = process.env.ENABLE_BANKING_APP_ID || 'da29a728-39e7-494d-9913-987087276661';
-const REDIRECT_URL = 'https://localhost/';
+// Default to localhost:8081 for typical development workflow if no env var is set.
+// The frontend will usually send a specific redirectUrl to override this.
+const DEFAULT_REDIRECT_URL = process.env.BANKING_REDIRECT_URL || 'http://localhost:8081/accounts';
 
 export async function POST(request: Request) {
     try {
         const body = await request.json().catch(() => ({}));
         const bankName = body.bankName || 'Commerzbank';
+        // Allow client to specify the redirect URL (e.g. for different environments/platforms)
+        const redirectUrl = body.redirectUrl || DEFAULT_REDIRECT_URL;
+
+        console.log(`[auth-url] Requesting auth for bank: ${bankName}, country: ${body.country}, redirect: ${redirectUrl}`);
 
         const privateKey = await importPKCS8(PRIVATE_KEY, 'RS256');
 
@@ -88,7 +94,7 @@ export async function POST(request: Request) {
                 },
                 aspsp: { name: bankName, country: 'DE' },
                 state: 'my-personal-request',
-                redirect_url: REDIRECT_URL,
+                redirect_url: redirectUrl,
             }),
         });
 

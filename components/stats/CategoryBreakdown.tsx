@@ -1,8 +1,22 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { PieChart } from 'react-native-gifted-charts';
 import { useTheme } from '@/context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
+
+// Modern, vibrant color palette
+const MODERN_COLORS = [
+    '#8B5CF6', // Violet
+    '#EC4899', // Pink
+    '#06B6D4', // Cyan
+    '#3B82F6', // Blue
+    '#10B981', // Emerald
+    '#F59E0B', // Amber
+    '#6366F1', // Indigo
+    '#F43F5E', // Rose
+    '#84CC16', // Lime
+    '#14B8A6', // Teal
+];
 
 interface CategoryData {
     name: string;
@@ -30,6 +44,17 @@ export default function CategoryBreakdown({
 }: CategoryBreakdownProps) {
     const { colors: theme } = useTheme();
 
+    // Map data to use modern colors consistently based on index
+    const processedData = useMemo(() => {
+        if (!data) return [];
+        // Sort first to ensure consistent coloring order (highest value = first color)
+        const sorted = [...data].sort((a, b) => b.value - a.value);
+        return sorted.map((item, index) => ({
+            ...item,
+            color: MODERN_COLORS[index % MODERN_COLORS.length]
+        }));
+    }, [data]);
+
     if (!data || data.length === 0) {
         return (
             <View style={styles.emptyContainer}>
@@ -38,30 +63,28 @@ export default function CategoryBreakdown({
         );
     }
 
-    const pieData = data.map(item => ({
+    const pieData = processedData.map(item => ({
         value: item.value,
         color: item.color,
         text: item.name,
         focused: false,
     }));
 
-    const sortedData = [...data].sort((a, b) => b.value - a.value);
-
     const pieChart = (
-        <View style={[styles.chartContainer, horizontal && { marginBottom: 0, marginRight: 24, flex: 1 }]}>
+        <View style={[styles.chartContainer, horizontal && { marginBottom: 0, marginRight: 24, flex: 1, justifyContent: 'center' }]}>
             <PieChart
                 data={pieData}
                 donut
-                radius={horizontal ? 130 : 120}
-                innerRadius={horizontal ? 86 : 80}
+                radius={horizontal ? 160 : 140}
+                innerRadius={horizontal ? 116 : 100}
                 innerCircleColor={theme.cardBackground}
                 showText={false}
                 centerLabelComponent={() => (
                     <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-                        <Text style={{ color: theme.text, fontSize: horizontal ? 20 : 24, fontWeight: 'bold' }}>
+                        <Text style={{ color: theme.text, fontSize: horizontal ? 24 : 28, fontWeight: 'bold' }}>
                             €{total.toLocaleString('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                         </Text>
-                        <Text style={{ color: theme.icon, fontSize: 13 }}>Total</Text>
+                        <Text style={{ color: theme.icon, fontSize: 14 }}>Total</Text>
                     </View>
                 )}
             />
@@ -70,7 +93,7 @@ export default function CategoryBreakdown({
 
     const list = (
         <View style={[styles.listContainer, horizontal && { flex: 1 }]}>
-            {sortedData.map((item, index) => {
+            {processedData.map((item, index) => {
                 const percentage = total > 0 ? (item.value / total) * 100 : 0;
                 const budget = categoryBudgets?.[item.name];
                 const overBudget = budget != null && budget > 0 && item.value > budget;
@@ -137,7 +160,7 @@ export default function CategoryBreakdown({
 
     if (horizontal) {
         return (
-            <View style={[styles.container, { flexDirection: 'row', alignItems: 'flex-start' }]}>
+            <View style={[styles.container, { flexDirection: 'row', alignItems: 'center' }]}>
                 {pieChart}
                 {list}
             </View>

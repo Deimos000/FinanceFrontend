@@ -81,16 +81,19 @@ export default function StatisticsScreen() {
 
         switch (range) {
             case 'week':
-                start.setDate(end.getDate() - 7);
+                // Last 10 weeks
+                start.setDate(end.getDate() - 70);
                 break;
             case 'month':
-                start.setMonth(end.getMonth() - 1);
+                // Last 10 months
+                start.setMonth(end.getMonth() - 10);
                 break;
             case 'year':
-                start.setFullYear(end.getFullYear() - 1);
+                // Last 10 years
+                start.setFullYear(end.getFullYear() - 10);
                 break;
             default:
-                start.setMonth(end.getMonth() - 1);
+                start.setMonth(end.getMonth() - 10);
         }
 
         return {
@@ -508,7 +511,7 @@ export default function StatisticsScreen() {
                             {/* Spending Trends – full width */}
                             <View style={styles.card}>
                                 <Text style={styles.cardTitle}>Spending Trends</Text>
-                                <TrendChart data={categoryTrends} categoryColors={categoryColors} width={contentWidth - 40} />
+                                <TrendChart data={categoryTrends} categoryColors={categoryColors} width={contentWidth - 40} timeRange={timeRange} />
                             </View>
 
                             {/* Uncategorized */}
@@ -614,7 +617,7 @@ export default function StatisticsScreen() {
                                 <View style={styles.card}>
                                     <Text style={styles.cardTitle}>Spending Trend (By Category)</Text>
                                     <View style={{ overflow: 'hidden' }}>
-                                        <TrendChart data={categoryTrends} categoryColors={categoryColors} />
+                                        <TrendChart data={categoryTrends} categoryColors={categoryColors} timeRange={timeRange} />
                                     </View>
                                 </View>
 

@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, usePathname } from 'expo-router';
 import { useTheme } from '@/context/ThemeContext';
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface NavItem {
     name: string;
@@ -31,7 +32,7 @@ export default function DesktopSidebar() {
     };
 
     return (
-        <View style={[styles.container, { backgroundColor: '#1A1A2E', borderRightColor: '#2A2A4A' }]}>
+        <View style={[styles.container, { backgroundColor: theme.cardBackground, borderRightColor: theme.border }]}>
             {/* Logo / Brand */}
             <View style={styles.brand}>
                 <View style={styles.logoCircle}>
@@ -45,21 +46,28 @@ export default function DesktopSidebar() {
                 {NAV_ITEMS.map((item) => {
                     const active = isActive(item.route);
                     return (
+
                         <TouchableOpacity
                             key={item.route}
                             style={[
                                 styles.navItem,
                                 active && styles.navItemActive,
-                                active && { backgroundColor: '#4B008220' },
                             ]}
                             onPress={() => router.push(item.route as any)}
                             activeOpacity={0.7}
                         >
-                            {active && <View style={styles.activeIndicator} />}
+                            {active && (
+                                <LinearGradient
+                                    colors={['#7F5AF0', '#4B0082']}
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 0 }}
+                                    style={[StyleSheet.absoluteFill, { borderRadius: 12 }]}
+                                />
+                            )}
                             <Ionicons
                                 name={active ? item.iconFocused : item.icon}
                                 size={20}
-                                color={active ? '#9D4EDD' : '#8E8EA0'}
+                                color={active ? '#FFFFFF' : '#8E8EA0'}
                             />
                             <Text
                                 style={[
@@ -72,6 +80,7 @@ export default function DesktopSidebar() {
                             </Text>
                         </TouchableOpacity>
                     );
+
                 })}
             </View>
 
@@ -134,7 +143,11 @@ const styles = StyleSheet.create({
         position: 'relative',
     },
     navItemActive: {
-        backgroundColor: 'rgba(75, 0, 130, 0.12)',
+        shadowColor: '#7F5AF0',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 4,
     },
     activeIndicator: {
         position: 'absolute',
@@ -143,7 +156,12 @@ const styles = StyleSheet.create({
         bottom: 8,
         width: 3,
         borderRadius: 2,
-        backgroundColor: '#9D4EDD',
+        backgroundColor: '#FFFFFF',
+        shadowColor: '#FFFFFF',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.8,
+        shadowRadius: 8,
+        elevation: 5,
     },
     navLabel: {
         fontSize: 14,
