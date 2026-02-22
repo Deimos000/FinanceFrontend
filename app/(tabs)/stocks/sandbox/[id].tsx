@@ -23,6 +23,7 @@ export default function SandboxDetail() {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [permission, setPermission] = useState<string>('owner');
 
     // Trade State
     const [tradeModalVisible, setTradeModalVisible] = useState(false);
@@ -32,6 +33,8 @@ export default function SandboxDetail() {
     // Scrubber State
     const [scrubValue, setScrubValue] = useState<number | null>(null);
     const [scrubTime, setScrubTime] = useState<number | null>(null);
+
+    const canEdit = permission === 'owner' || permission === 'edit';
 
     const loadData = useCallback(async () => {
         try {
@@ -44,6 +47,7 @@ export default function SandboxDetail() {
             if (portData) {
                 setPortfolio(portData);
                 setTransactions(txData);
+                if (portData.permission) setPermission(portData.permission);
             } else {
                 setError("Failed to load portfolio.");
             }
@@ -160,6 +164,16 @@ export default function SandboxDetail() {
                     </View>
                 </View>
 
+                {/* Shared Badge */}
+                {permission !== 'owner' && (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 12, gap: 6 }}>
+                        <Ionicons name="people-outline" size={14} color={permission === 'edit' ? '#4cd964' : colors.primary} />
+                        <Text style={{ color: permission === 'edit' ? '#4cd964' : colors.primary, fontSize: 13, fontWeight: '600', textTransform: 'uppercase' }}>
+                            Shared • {permission} access
+                        </Text>
+                    </View>
+                )}
+
                 {/* Chart */}
                 <View style={{ height: 300, marginBottom: 20 }}>
                     {portfolio?.equity_history && portfolio.equity_history.length > 0 ? (
@@ -196,13 +210,15 @@ export default function SandboxDetail() {
                 <View style={{ paddingHorizontal: 20 }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                         <Text style={{ color: colors.text, fontSize: 20, fontWeight: 'bold' }}>Positions</Text>
-                        <TouchableOpacity
-                            onPress={handleAddStock}
-                            style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.cardBackground, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 20, borderWidth: 1, borderColor: colors.border }}
-                        >
-                            <Ionicons name="add" size={16} color={colors.primary} />
-                            <Text style={{ color: colors.primary, fontWeight: '600', marginLeft: 4 }}>Add Stock</Text>
-                        </TouchableOpacity>
+                        {canEdit && (
+                            <TouchableOpacity
+                                onPress={handleAddStock}
+                                style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.cardBackground, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 20, borderWidth: 1, borderColor: colors.border }}
+                            >
+                                <Ionicons name="add" size={16} color={colors.primary} />
+                                <Text style={{ color: colors.primary, fontWeight: '600', marginLeft: 4 }}>Add Stock</Text>
+                            </TouchableOpacity>
+                        )}
                     </View>
 
                     {portfolio?.portfolio.map((item) => (
@@ -223,7 +239,7 @@ export default function SandboxDetail() {
                                 <Text style={{ color: colors.secondary, fontSize: 13 }}>{item.quantity} shares</Text>
                             </View>
 
-                            <View style={{ alignItems: 'flex-end', marginRight: 15 }}>
+                            <View style={{ alignItems: 'flex-end', marginRight: canEdit ? 15 : 0 }}>
                                 <Text style={{ color: colors.text, fontSize: 16, fontWeight: 'bold' }}>
                                     ${item.current_value.toFixed(2)}
                                 </Text>
@@ -232,22 +248,24 @@ export default function SandboxDetail() {
                                 </Text>
                             </View>
 
-                            <TouchableOpacity
-                                onPress={(e) => {
-                                    e.stopPropagation();
-                                    handleTradeStock(item);
-                                }}
-                                style={{
-                                    paddingVertical: 8,
-                                    paddingHorizontal: 12,
-                                    backgroundColor: colors.cardBackground,
-                                    borderRadius: 8,
-                                    borderWidth: 1,
-                                    borderColor: colors.border
-                                }}
-                            >
-                                <Text style={{ color: colors.primary, fontWeight: '600', fontSize: 14 }}>Trade</Text>
-                            </TouchableOpacity>
+                            {canEdit && (
+                                <TouchableOpacity
+                                    onPress={(e) => {
+                                        e.stopPropagation();
+                                        handleTradeStock(item);
+                                    }}
+                                    style={{
+                                        paddingVertical: 8,
+                                        paddingHorizontal: 12,
+                                        backgroundColor: colors.cardBackground,
+                                        borderRadius: 8,
+                                        borderWidth: 1,
+                                        borderColor: colors.border
+                                    }}
+                                >
+                                    <Text style={{ color: colors.primary, fontWeight: '600', fontSize: 14 }}>Trade</Text>
+                                </TouchableOpacity>
+                            )}
                         </TouchableOpacity>
                     ))}
 

@@ -1,7 +1,5 @@
-import { BACKEND_URL } from '@/utils/api';
+import { BACKEND_URL, api } from '@/utils/api';
 import { Stock, Sandbox, SandboxPortfolio } from './types';
-
-const API_BASE_URL = `${BACKEND_URL}/api/yahoo-proxy`;
 
 // --- Mappers ---
 
@@ -119,11 +117,8 @@ export const searchStocks = async (query: string): Promise<Stock[]> => {
     if (!query) return [];
 
     try {
-        console.log(`[API] Searching ${query} via ${API_BASE_URL}`);
-        const res = await fetch(`${API_BASE_URL}?type=search&query=${encodeURIComponent(query)}`);
-        if (!res.ok) throw new Error('Search failed');
-
-        const data = await res.json();
+        console.log(`[API] Searching ${query} via /api/yahoo-proxy`);
+        const data = await api(`/api/yahoo-proxy?type=search&query=${encodeURIComponent(query)}`);
 
         if (data.quotes && Array.isArray(data.quotes)) {
             return data.quotes
@@ -151,9 +146,7 @@ export const searchStocks = async (query: string): Promise<Stock[]> => {
  */
 export const getWishlist = async () => {
     try {
-        const res = await fetch(`${BACKEND_URL}/api/wishlist`);
-        if (!res.ok) throw new Error('Failed to fetch wishlist');
-        const data = await res.json();
+        const data = await api('/api/wishlist');
         return data.wishlist || [];
     } catch (e) {
         console.error("Get Wishlist Error:", e);
@@ -163,7 +156,7 @@ export const getWishlist = async () => {
 
 export const addToWishlist = async (symbol: string, initialPrice: number, note: string = "", snapshot: any = {}) => {
     try {
-        await fetch(`${BACKEND_URL}/api/wishlist`, {
+        await api('/api/wishlist', {
             method: 'POST',
             body: JSON.stringify({ symbol, initial_price: initialPrice, note, snapshot })
         });
@@ -176,7 +169,7 @@ export const addToWishlist = async (symbol: string, initialPrice: number, note: 
 
 export const removeFromWishlist = async (symbol: string) => {
     try {
-        await fetch(`${BACKEND_URL}/api/wishlist/${symbol}`, {
+        await api(`/api/wishlist/${symbol}`, {
             method: 'DELETE'
         });
         return true;
@@ -197,21 +190,14 @@ export const getStockDetails = async (
     end?: string
 ): Promise<Stock | null> => {
     try {
-        console.log(`[API] Fetching ${symbol} via proxy at ${API_BASE_URL}, start=${start}, end=${end}`);
+        console.log(`[API] Fetching ${symbol} via proxy at /api/yahoo-proxy, start=${start}, end=${end}`);
 
-        let url = `${API_BASE_URL}?symbol=${encodeURIComponent(symbol)}&range=${range}&interval=${interval}`;
+        let url = `/api/yahoo-proxy?symbol=${encodeURIComponent(symbol)}&range=${range}&interval=${interval}`;
         if (start && end) {
             url += `&start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`;
         }
 
-        const res = await fetch(url);
-
-        if (!res.ok) {
-            const text = await res.text();
-            throw new Error(`Proxy error: ${res.status} ${text}`);
-        }
-
-        const data = await res.json();
+        const data = await api(url);
 
         if (data.error) throw new Error(data.details);
 
@@ -226,9 +212,7 @@ export const getStockDetails = async (
 // Mock function for "Top Movers" or default list if needed
 export const getMarketMovers = async (): Promise<Stock[]> => {
     try {
-        const res = await fetch(`${API_BASE_URL}?type=market_movers`);
-        if (!res.ok) throw new Error('Failed to fetch market movers');
-        const data = await res.json();
+        const data = await api('/api/yahoo-proxy?type=market_movers');
 
         if (data.quotes && Array.isArray(data.quotes)) {
             return data.quotes.map((q: any) => ({
@@ -252,12 +236,10 @@ export const getMarketMovers = async (): Promise<Stock[]> => {
  */
 export const createSandbox = async (name: string, balance: number = 10000): Promise<Sandbox | null> => {
     try {
-        const res = await fetch(`${BACKEND_URL}/api/sandbox`, {
+        const data = await api('/api/sandbox', {
             method: 'POST',
             body: JSON.stringify({ name, balance })
         });
-        if (!res.ok) throw new Error('Failed to create sandbox');
-        const data = await res.json();
         return {
             id: data.id,
             name: data.name,
@@ -274,10 +256,8 @@ export const createSandbox = async (name: string, balance: number = 10000): Prom
 
 export const getSandboxes = async (): Promise<Sandbox[]> => {
     try {
-        console.log(`[API] Fetching sandboxes from ${BACKEND_URL}/api/sandboxes`);
-        const res = await fetch(`${BACKEND_URL}/api/sandboxes`);
-        if (!res.ok) throw new Error('Failed to fetch sandboxes');
-        const data = await res.json();
+        console.log(`[API] Fetching sandboxes from /api/sandboxes`);
+        const data = await api('/api/sandboxes');
         return data.sandboxes || [];
     } catch (e) {
         console.error("Get Sandboxes Error:", e);
@@ -287,7 +267,7 @@ export const getSandboxes = async (): Promise<Sandbox[]> => {
 
 export const deleteSandbox = async (id: number): Promise<boolean> => {
     try {
-        await fetch(`${BACKEND_URL}/api/sandbox/${id}`, {
+        await api(`/api/sandbox/${id}`, {
             method: 'DELETE'
         });
         return true;
@@ -299,9 +279,7 @@ export const deleteSandbox = async (id: number): Promise<boolean> => {
 
 export const getSandboxPortfolio = async (id: number): Promise<SandboxPortfolio | null> => {
     try {
-        const res = await fetch(`${BACKEND_URL}/api/sandbox/${id}/portfolio`);
-        if (!res.ok) throw new Error('Failed to fetch portfolio');
-        return await res.json();
+        return await api(`/api/sandbox/${id}/portfolio`);
     } catch (e) {
         console.error("Get Portfolio Error:", e);
         return null;
@@ -311,9 +289,7 @@ export const getSandboxPortfolio = async (id: number): Promise<SandboxPortfolio 
 // Basic Quote (Price + Change)
 export const getStockQuote = async (symbol: string): Promise<Stock | null> => {
     try {
-        const res = await fetch(`${API_BASE_URL}?symbol=${encodeURIComponent(symbol)}&range=1d&interval=1d`);
-        if (!res.ok) return null;
-        const data = await res.json();
+        const data = await api(`/api/yahoo-proxy?symbol=${encodeURIComponent(symbol)}&range=1d&interval=1d`);
         return mapChartDataToStock(symbol, data);
     } catch (e) {
         return null;
@@ -326,14 +302,10 @@ export const tradeStock = async (sandboxId: number, symbol: string, type: 'BUY' 
         if (quantity) body.quantity = quantity;
         if (amount) body.amount = amount;
 
-        const res = await fetch(`${BACKEND_URL}/api/sandbox/${sandboxId}/trade`, {
+        await api(`/api/sandbox/${sandboxId}/trade`, {
             method: 'POST',
             body: JSON.stringify(body)
         });
-        if (!res.ok) {
-            const err = await res.json();
-            throw new Error(err.error || 'Trade failed');
-        }
         return true;
     } catch (e) {
         console.error("Trade Error:", e);
@@ -343,12 +315,71 @@ export const tradeStock = async (sandboxId: number, symbol: string, type: 'BUY' 
 
 export const getSandboxTransactions = async (id: number): Promise<any[]> => {
     try {
-        const res = await fetch(`${BACKEND_URL}/api/sandbox/${id}/transactions`);
-        if (!res.ok) throw new Error('Failed to fetch transactions');
-        const data = await res.json();
+        const data = await api(`/api/sandbox/${id}/transactions`);
         return data.transactions || [];
     } catch (e) {
         console.error("Get Transactions Error:", e);
         return [];
+    }
+};
+
+/**
+ * Sandbox Sharing API
+ */
+export const getSharedSandboxes = async (): Promise<Sandbox[]> => {
+    try {
+        const data = await api('/api/sandboxes/shared');
+        return data.sandboxes || [];
+    } catch (e) {
+        console.error("Get Shared Sandboxes Error:", e);
+        return [];
+    }
+};
+
+export const getSandboxShares = async (sandboxId: number): Promise<any[]> => {
+    try {
+        const data = await api(`/api/sandbox/${sandboxId}/shares`);
+        return data.shares || [];
+    } catch (e) {
+        console.error("Get Shares Error:", e);
+        return [];
+    }
+};
+
+export const shareSandbox = async (sandboxId: number, friendId: number, permission: 'watch' | 'edit'): Promise<boolean> => {
+    try {
+        await api(`/api/sandbox/${sandboxId}/share`, {
+            method: 'POST',
+            body: JSON.stringify({ friend_id: friendId, permission })
+        });
+        return true;
+    } catch (e) {
+        console.error("Share Sandbox Error:", e);
+        return false;
+    }
+};
+
+export const updateSandboxShare = async (sandboxId: number, shareId: number, permission: 'watch' | 'edit'): Promise<boolean> => {
+    try {
+        await api(`/api/sandbox/${sandboxId}/share/${shareId}`, {
+            method: 'PUT',
+            body: JSON.stringify({ permission })
+        });
+        return true;
+    } catch (e) {
+        console.error("Update Share Error:", e);
+        return false;
+    }
+};
+
+export const removeSandboxShare = async (sandboxId: number, shareId: number): Promise<boolean> => {
+    try {
+        await api(`/api/sandbox/${sandboxId}/share/${shareId}`, {
+            method: 'DELETE'
+        });
+        return true;
+    } catch (e) {
+        console.error("Remove Share Error:", e);
+        return false;
     }
 };

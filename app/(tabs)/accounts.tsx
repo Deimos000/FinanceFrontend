@@ -20,6 +20,7 @@ import {
 } from 'react-native';
 import { useTheme } from '@/context/ThemeContext';
 import { useIsDesktop } from '@/hooks/useIsDesktop';
+import TabScreenWrapper from '@/components/ui/TabScreenWrapper';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -409,201 +410,205 @@ export default function AccountsScreen() {
     // ─── Desktop Layout ──────────────────────────────────────────────────────
     if (isDesktop) {
         return (
-            <View style={{ flex: 1, backgroundColor: theme.background }}>
-                <ScrollView
-                    contentContainerStyle={{ paddingHorizontal: 32, paddingTop: 28, paddingBottom: 48, maxWidth: 1100, alignSelf: 'center' as any, width: '100%' as any }}
-                    refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />}
-                >
-                    {/* Page header */}
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
-                        <View>
-                            <Text style={{ fontSize: 30, fontWeight: '800', color: theme.text, letterSpacing: -0.5 }}>
-                                Bank Accounts
-                            </Text>
-                            <Text style={{ fontSize: 13, color: theme.icon, marginTop: 2 }}>
-                                {accounts.length} account{accounts.length !== 1 ? 's' : ''} connected
-                            </Text>
-                        </View>
-                        <TouchableOpacity
-                            onPress={onRefresh}
-                            disabled={refreshing || loading}
-                            style={{
-                                flexDirection: 'row', alignItems: 'center', gap: 6,
-                                backgroundColor: theme.primary + '18', paddingHorizontal: 14,
-                                paddingVertical: 9, borderRadius: 12,
-                                borderWidth: 1, borderColor: theme.primary + '30',
-                            }}>
-                            {refreshing || loading
-                                ? <ActivityIndicator size="small" color={theme.primary} />
-                                : <Ionicons name="sync" size={15} color={theme.primary} />}
-                            <Text style={{ color: theme.primary, fontWeight: '600', fontSize: 13 }}>
-                                {refreshing ? 'Syncing…' : 'Sync All'}
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
-
-                    {error && (
-                        <View style={{ backgroundColor: theme.danger + '18', borderRadius: 12, padding: 14, marginBottom: 20, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                            <Ionicons name="warning" size={18} color={theme.danger} />
-                            <Text style={{ color: theme.danger, flex: 1, fontSize: 13 }}>{error}</Text>
-                        </View>
-                    )}
-
-                    {/* Two-column layout */}
-                    <View style={{ flexDirection: 'row', gap: 24, alignItems: 'flex-start' }}>
-
-                        {/* Left: Accounts list */}
-                        <View style={{ flex: 3 }}>
-                            <Text style={{ fontSize: 13, fontWeight: '600', color: theme.icon, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 12 }}>
-                                Connected Accounts
-                            </Text>
-
-                            {loading && !refreshing && accounts.length === 0 ? (
-                                <View style={{ alignItems: 'center', paddingVertical: 48 }}>
-                                    <ActivityIndicator size="large" color={theme.primary} />
-                                </View>
-                            ) : accounts.length === 0 ? (
-                                <View style={{
-                                    alignItems: 'center', paddingVertical: 52,
-                                    backgroundColor: theme.cardBackground, borderRadius: 16,
-                                    borderWidth: 1, borderColor: theme.border,
+            <TabScreenWrapper>
+                <View style={{ flex: 1, backgroundColor: theme.background }}>
+                    <ScrollView
+                        contentContainerStyle={{ paddingHorizontal: 32, paddingTop: 28, paddingBottom: 48, maxWidth: 1100, alignSelf: 'center' as any, width: '100%' as any }}
+                        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />}
+                    >
+                        {/* Page header */}
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
+                            <View>
+                                <Text style={{ fontSize: 30, fontWeight: '800', color: theme.text, letterSpacing: -0.5 }}>
+                                    Bank Accounts
+                                </Text>
+                                <Text style={{ fontSize: 13, color: theme.icon, marginTop: 2 }}>
+                                    {accounts.length} account{accounts.length !== 1 ? 's' : ''} connected
+                                </Text>
+                            </View>
+                            <TouchableOpacity
+                                onPress={onRefresh}
+                                disabled={refreshing || loading}
+                                style={{
+                                    flexDirection: 'row', alignItems: 'center', gap: 6,
+                                    backgroundColor: theme.primary + '18', paddingHorizontal: 14,
+                                    paddingVertical: 9, borderRadius: 12,
+                                    borderWidth: 1, borderColor: theme.primary + '30',
                                 }}>
-                                    <Text style={{ fontSize: 48, marginBottom: 14 }}>🏦</Text>
-                                    <Text style={{ color: theme.text, fontSize: 18, fontWeight: '700', marginBottom: 6 }}>No accounts yet</Text>
-                                    <Text style={{ color: theme.icon, fontSize: 14 }}>Add a bank account using the panel on the right →</Text>
-                                </View>
-                            ) : (
-                                <View style={{ gap: 10 }}>
-                                    {accounts.map((acc) => (
-                                        <AccountCard
-                                            key={acc.id}
-                                            account={acc}
-                                            onPress={handleAccountPress}
-                                            onDelete={confirmDelete}
-                                        />
-                                    ))}
-                                </View>
-                            )}
+                                {refreshing || loading
+                                    ? <ActivityIndicator size="small" color={theme.primary} />
+                                    : <Ionicons name="sync" size={15} color={theme.primary} />}
+                                <Text style={{ color: theme.primary, fontWeight: '600', fontSize: 13 }}>
+                                    {refreshing ? 'Syncing…' : 'Sync All'}
+                                </Text>
+                            </TouchableOpacity>
                         </View>
 
-                        {/* Right: Add Bank panel */}
-                        <View style={{ flex: 2, minWidth: 300 }}>
-                            <Text style={{ fontSize: 13, fontWeight: '600', color: theme.icon, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 12 }}>
-                                Add Bank Account
-                            </Text>
-                            <View style={{
-                                backgroundColor: theme.cardBackground, borderRadius: 20,
-                                padding: 22, borderWidth: 1, borderColor: theme.border,
-                                minHeight: 400,
-                            }}>
-                                <ConnectPanel {...panelProps} onClose={undefined} />
+                        {error && (
+                            <View style={{ backgroundColor: theme.danger + '18', borderRadius: 12, padding: 14, marginBottom: 20, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                                <Ionicons name="warning" size={18} color={theme.danger} />
+                                <Text style={{ color: theme.danger, flex: 1, fontSize: 13 }}>{error}</Text>
+                            </View>
+                        )}
+
+                        {/* Two-column layout */}
+                        <View style={{ flexDirection: 'row', gap: 24, alignItems: 'flex-start' }}>
+
+                            {/* Left: Accounts list */}
+                            <View style={{ flex: 3 }}>
+                                <Text style={{ fontSize: 13, fontWeight: '600', color: theme.icon, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 12 }}>
+                                    Connected Accounts
+                                </Text>
+
+                                {loading && !refreshing && accounts.length === 0 ? (
+                                    <View style={{ alignItems: 'center', paddingVertical: 48 }}>
+                                        <ActivityIndicator size="large" color={theme.primary} />
+                                    </View>
+                                ) : accounts.length === 0 ? (
+                                    <View style={{
+                                        alignItems: 'center', paddingVertical: 52,
+                                        backgroundColor: theme.cardBackground, borderRadius: 16,
+                                        borderWidth: 1, borderColor: theme.border,
+                                    }}>
+                                        <Text style={{ fontSize: 48, marginBottom: 14 }}>🏦</Text>
+                                        <Text style={{ color: theme.text, fontSize: 18, fontWeight: '700', marginBottom: 6 }}>No accounts yet</Text>
+                                        <Text style={{ color: theme.icon, fontSize: 14 }}>Add a bank account using the panel on the right →</Text>
+                                    </View>
+                                ) : (
+                                    <View style={{ gap: 10 }}>
+                                        {accounts.map((acc) => (
+                                            <AccountCard
+                                                key={acc.id}
+                                                account={acc}
+                                                onPress={handleAccountPress}
+                                                onDelete={confirmDelete}
+                                            />
+                                        ))}
+                                    </View>
+                                )}
+                            </View>
+
+                            {/* Right: Add Bank panel */}
+                            <View style={{ flex: 2, minWidth: 300 }}>
+                                <Text style={{ fontSize: 13, fontWeight: '600', color: theme.icon, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 12 }}>
+                                    Add Bank Account
+                                </Text>
+                                <View style={{
+                                    backgroundColor: theme.cardBackground, borderRadius: 20,
+                                    padding: 22, borderWidth: 1, borderColor: theme.border,
+                                    minHeight: 400,
+                                }}>
+                                    <ConnectPanel {...panelProps} onClose={undefined} />
+                                </View>
                             </View>
                         </View>
-                    </View>
-                </ScrollView>
-            </View>
+                    </ScrollView>
+                </View>
+            </TabScreenWrapper>
         );
     }
 
     // ─── Mobile Layout ───────────────────────────────────────────────────────
     return (
-        <View style={{ flex: 1, backgroundColor: theme.background }}>
-            {/* Mobile header */}
-            <View style={{
-                flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-                paddingTop: 60, paddingBottom: 14, paddingHorizontal: 20,
-                backgroundColor: theme.cardBackground, borderBottomWidth: 1, borderBottomColor: theme.border,
-            }}>
-                <Text style={{ fontSize: 26, fontWeight: '800', color: theme.text, letterSpacing: -0.5 }}>Accounts</Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                    <TouchableOpacity onPress={onRefresh} disabled={refreshing || loading}>
-                        {refreshing || loading
-                            ? <ActivityIndicator size="small" color={theme.primary} />
-                            : <Ionicons name="sync" size={22} color={theme.primary} />}
-                    </TouchableOpacity>
+        <TabScreenWrapper>
+            <View style={{ flex: 1, backgroundColor: theme.background }}>
+                {/* Mobile header */}
+                <View style={{
+                    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+                    paddingTop: 60, paddingBottom: 14, paddingHorizontal: 20,
+                    backgroundColor: theme.cardBackground, borderBottomWidth: 1, borderBottomColor: theme.border,
+                }}>
+                    <Text style={{ fontSize: 26, fontWeight: '800', color: theme.text, letterSpacing: -0.5 }}>Accounts</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                        <TouchableOpacity onPress={onRefresh} disabled={refreshing || loading}>
+                            {refreshing || loading
+                                ? <ActivityIndicator size="small" color={theme.primary} />
+                                : <Ionicons name="sync" size={22} color={theme.primary} />}
+                        </TouchableOpacity>
+                    </View>
                 </View>
-            </View>
 
-            <ScrollView
-                contentContainerStyle={{ padding: 18, paddingBottom: 140 }}
-                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />}
-                showsVerticalScrollIndicator={false}
-            >
-                {error && (
-                    <View style={{ backgroundColor: theme.danger + '18', borderRadius: 12, padding: 12, marginBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                        <Ionicons name="warning" size={16} color={theme.danger} />
-                        <Text style={{ color: theme.danger, flex: 1, fontSize: 13 }}>{error}</Text>
-                    </View>
-                )}
+                <ScrollView
+                    contentContainerStyle={{ padding: 18, paddingBottom: 140 }}
+                    refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />}
+                    showsVerticalScrollIndicator={false}
+                >
+                    {error && (
+                        <View style={{ backgroundColor: theme.danger + '18', borderRadius: 12, padding: 12, marginBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                            <Ionicons name="warning" size={16} color={theme.danger} />
+                            <Text style={{ color: theme.danger, flex: 1, fontSize: 13 }}>{error}</Text>
+                        </View>
+                    )}
 
-                {/* Add bank button */}
-                <TouchableOpacity
-                    onPress={() => setShowAddBank(true)}
-                    style={{
-                        backgroundColor: theme.primary, borderRadius: 14,
-                        paddingVertical: 15, paddingHorizontal: 20,
-                        flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-                        gap: 8, marginBottom: 24,
-                        shadowColor: theme.primary, shadowOffset: { width: 0, height: 4 },
-                        shadowOpacity: 0.3, shadowRadius: 8, elevation: 4,
-                    }}>
-                    <Ionicons name="add-circle" size={20} color="#fff" />
-                    <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>Add Bank Account</Text>
-                </TouchableOpacity>
+                    {/* Add bank button */}
+                    <TouchableOpacity
+                        onPress={() => setShowAddBank(true)}
+                        style={{
+                            backgroundColor: theme.primary, borderRadius: 14,
+                            paddingVertical: 15, paddingHorizontal: 20,
+                            flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+                            gap: 8, marginBottom: 24,
+                            shadowColor: theme.primary, shadowOffset: { width: 0, height: 4 },
+                            shadowOpacity: 0.3, shadowRadius: 8, elevation: 4,
+                        }}>
+                        <Ionicons name="add-circle" size={20} color="#fff" />
+                        <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>Add Bank Account</Text>
+                    </TouchableOpacity>
 
-                {/* Accounts */}
-                <Text style={{ fontSize: 12, fontWeight: '600', color: theme.icon, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 12 }}>
-                    Connected Accounts
-                </Text>
+                    {/* Accounts */}
+                    <Text style={{ fontSize: 12, fontWeight: '600', color: theme.icon, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 12 }}>
+                        Connected Accounts
+                    </Text>
 
-                {loading && !refreshing && accounts.length === 0 ? (
-                    <ActivityIndicator size="large" color={theme.primary} style={{ marginTop: 40 }} />
-                ) : accounts.length === 0 ? (
-                    <View style={{ alignItems: 'center', paddingVertical: 40 }}>
-                        <Text style={{ fontSize: 48, marginBottom: 12 }}>🏦</Text>
-                        <Text style={{ color: theme.text, fontSize: 17, fontWeight: '700', marginBottom: 6 }}>No accounts yet</Text>
-                        <Text style={{ color: theme.icon, fontSize: 14, textAlign: 'center' }}>Tap "Add Bank Account" above{'\n'}to connect your first bank.</Text>
-                    </View>
-                ) : (
-                    <View style={{ gap: 10 }}>
-                        {accounts.map((acc) => (
-                            <AccountCard
-                                key={acc.id}
-                                account={acc}
-                                onPress={handleAccountPress}
-                                onDelete={confirmDelete}
-                            />
-                        ))}
-                    </View>
-                )}
-            </ScrollView>
+                    {loading && !refreshing && accounts.length === 0 ? (
+                        <ActivityIndicator size="large" color={theme.primary} style={{ marginTop: 40 }} />
+                    ) : accounts.length === 0 ? (
+                        <View style={{ alignItems: 'center', paddingVertical: 40 }}>
+                            <Text style={{ fontSize: 48, marginBottom: 12 }}>🏦</Text>
+                            <Text style={{ color: theme.text, fontSize: 17, fontWeight: '700', marginBottom: 6 }}>No accounts yet</Text>
+                            <Text style={{ color: theme.icon, fontSize: 14, textAlign: 'center' }}>Tap "Add Bank Account" above{'\n'}to connect your first bank.</Text>
+                        </View>
+                    ) : (
+                        <View style={{ gap: 10 }}>
+                            {accounts.map((acc) => (
+                                <AccountCard
+                                    key={acc.id}
+                                    account={acc}
+                                    onPress={handleAccountPress}
+                                    onDelete={confirmDelete}
+                                />
+                            ))}
+                        </View>
+                    )}
+                </ScrollView>
 
-            {/* Mobile: Add Bank Modal (bottom sheet style) */}
-            <Modal
-                visible={showAddBank}
-                animationType="slide"
-                transparent
-                onRequestClose={() => setShowAddBank(false)}
-            >
-                <Pressable
-                    style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}
-                    onPress={() => setShowAddBank(false)}
+                {/* Mobile: Add Bank Modal (bottom sheet style) */}
+                <Modal
+                    visible={showAddBank}
+                    animationType="slide"
+                    transparent
+                    onRequestClose={() => setShowAddBank(false)}
                 >
                     <Pressable
-                        style={{
-                            backgroundColor: theme.background, borderTopLeftRadius: 24,
-                            borderTopRightRadius: 24, padding: 24, maxHeight: '90%',
-                            borderTopWidth: 1, borderColor: theme.border,
-                        }}
-                        onPress={() => {/* prevent close */ }} >
-                        {/* Drag handle */}
-                        <View style={{ width: 36, height: 4, backgroundColor: theme.border, borderRadius: 2, alignSelf: 'center', marginBottom: 20 }} />
-                        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-                            <ConnectPanel {...panelProps} />
-                        </KeyboardAvoidingView>
+                        style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}
+                        onPress={() => setShowAddBank(false)}
+                    >
+                        <Pressable
+                            style={{
+                                backgroundColor: theme.background, borderTopLeftRadius: 24,
+                                borderTopRightRadius: 24, padding: 24, maxHeight: '90%',
+                                borderTopWidth: 1, borderColor: theme.border,
+                            }}
+                            onPress={() => {/* prevent close */ }} >
+                            {/* Drag handle */}
+                            <View style={{ width: 36, height: 4, backgroundColor: theme.border, borderRadius: 2, alignSelf: 'center', marginBottom: 20 }} />
+                            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+                                <ConnectPanel {...panelProps} />
+                            </KeyboardAvoidingView>
+                        </Pressable>
                     </Pressable>
-                </Pressable>
-            </Modal>
-        </View>
+                </Modal>
+            </View>
+        </TabScreenWrapper>
     );
 }

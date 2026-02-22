@@ -1,4 +1,6 @@
 import { DarkTheme, DefaultTheme, ThemeProvider as NavThemeProvider } from '@react-navigation/native';
+import { View } from 'react-native';
+import ParticleBackground from '../components/ui/ParticleBackground';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
@@ -39,14 +41,24 @@ function RootLayoutContent() {
   // Optionally render a loading screen or nothing while checking auth
   if (isLoading) return null;
 
+  // Ensure React Navigation theme doesn't paint over the galaxy
+  const navTheme = theme === 'dark'
+    ? { ...DarkTheme, colors: { ...DarkTheme.colors, background: 'transparent' } }
+    : DefaultTheme;
+
   return (
-    <NavThemeProvider value={theme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="login" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
+    <NavThemeProvider value={navTheme}>
+      <View style={{ flex: 1, backgroundColor: '#000000' }}>
+        {/* Render persistent background if theme is dark */}
+        {theme === 'dark' && <ParticleBackground />}
+
+        <Stack screenOptions={{ contentStyle: { backgroundColor: 'transparent' } }}>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="login" options={{ headerShown: false }} />
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          <Stack.Screen name="+not-found" />
+        </Stack>
+      </View>
     </NavThemeProvider>
   );
 }

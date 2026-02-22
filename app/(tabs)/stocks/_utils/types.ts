@@ -117,6 +117,13 @@ export interface Sandbox {
     initial_balance: number;
     total_equity: number;
     created_at: string;
+    // Sharing fields
+    owner_username?: string;
+    owner_id?: number;
+    permission?: 'owner' | 'watch' | 'edit';
+    is_shared?: boolean;
+    share_id?: number;
+    share_count?: number;
 }
 
 export interface SandboxPortfolioItem {
@@ -135,6 +142,7 @@ export interface SandboxPortfolio {
     initial_balance: number;
     total_equity: number;
     equity_history?: { timestamp: number; value: number }[];
+    permission?: string;
 }
 
 export interface SandboxTransaction {
@@ -143,5 +151,13 @@ export interface SandboxTransaction {
     type: 'BUY' | 'SELL';
     quantity: number;
     price: number;
+    created_at: string;
+}
+
+export interface SandboxShare {
+    id: number;
+    shared_with_id: number;
+    shared_with_username: string;
+    permission: 'watch' | 'edit';
     created_at: string;
 }

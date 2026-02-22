@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, Dimensions } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { BACKEND_URL } from '../utils/api';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
+
+const { width } = Dimensions.get('window');
 
 export default function LoginScreen() {
     const { setAuth } = useAuth();
-    const { theme } = useTheme();
     const router = useRouter();
 
     const [isLogin, setIsLogin] = useState(true);
@@ -17,12 +19,7 @@ export default function LoginScreen() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const isDark = theme === 'dark';
-    const bgColor = isDark ? '#1a1a2e' : '#f5f5f5';
-    const textColor = isDark ? '#ffffff' : '#000000';
-    const cardBg = isDark ? '#16213e' : '#ffffff';
-    const inputBg = isDark ? '#0f3460' : '#f0f0f0';
-    const primaryColor = '#e94560';
+    const primaryColor = '#4B0082'; // Persian Indigo
 
     const handleAuth = async () => {
         if (!username || !password) {
@@ -58,139 +55,252 @@ export default function LoginScreen() {
     };
 
     return (
-        <View style={[styles.container, { backgroundColor: bgColor }]}>
-            <View style={[styles.card, { backgroundColor: cardBg }]}>
-                <View style={styles.header}>
-                    <Ionicons name="wallet-outline" size={60} color={primaryColor} />
-                    <Text style={[styles.title, { color: textColor }]}>
-                        {isLogin ? 'Welcome Back' : 'Create Account'}
-                    </Text>
-                    <Text style={[styles.subtitle, { color: isDark ? '#a0a0a0' : '#666666' }]}>
-                        Finance Dashboard
-                    </Text>
-                </View>
-
-                {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-                <View style={styles.inputContainer}>
-                    <Text style={[styles.label, { color: textColor }]}>Username</Text>
-                    <TextInput
-                        style={[styles.input, { backgroundColor: inputBg, color: textColor }]}
-                        value={username}
-                        onChangeText={setUsername}
-                        placeholder="Enter your username"
-                        placeholderTextColor={isDark ? '#aaaaaa' : '#888888'}
-                        autoCapitalize="none"
-                    />
-                </View>
-
-                <View style={styles.inputContainer}>
-                    <Text style={[styles.label, { color: textColor }]}>Password</Text>
-                    <TextInput
-                        style={[styles.input, { backgroundColor: inputBg, color: textColor }]}
-                        value={password}
-                        onChangeText={setPassword}
-                        placeholder="Enter your password"
-                        placeholderTextColor={isDark ? '#aaaaaa' : '#888888'}
-                        secureTextEntry
-                    />
-                </View>
-
-                <TouchableOpacity
-                    style={[styles.button, { backgroundColor: primaryColor }]}
-                    onPress={handleAuth}
-                    disabled={loading}
-                >
-                    {loading ? (
-                        <ActivityIndicator color="#fff" />
-                    ) : (
-                        <Text style={styles.buttonText}>{isLogin ? 'Sign In' : 'Sign Up'}</Text>
-                    )}
-                </TouchableOpacity>
-
-                <View style={styles.footer}>
-                    <Text style={{ color: isDark ? '#aaaaaa' : '#666666' }}>
-                        {isLogin ? "Don't have an account? " : "Already have an account? "}
-                    </Text>
-                    <TouchableOpacity onPress={() => setIsLogin(!isLogin)}>
-                        <Text style={[styles.switchText, { color: primaryColor }]}>
-                            {isLogin ? 'Sign Up' : 'Sign In'}
+        <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.container}
+        >
+            {/* Glassmorphic overlay for the form */}
+            <View style={styles.centerWrapper}>
+                <BlurView intensity={15} tint="dark" style={styles.glassCard}>
+                    <View style={styles.header}>
+                        <View style={styles.logoContainer}>
+                            <View style={[styles.ring, styles.ring1]} />
+                            <View style={[styles.ring, styles.ring2]} />
+                        </View>
+                        <Text style={styles.title}>
+                            {isLogin ? 'Welcome Back' : 'Create Account'}
                         </Text>
+                        <Text style={styles.subtitle}>
+                            Deimos Finance
+                        </Text>
+                    </View>
+
+                    {error ? (
+                        <View style={styles.errorContainer}>
+                            <Ionicons name="alert-circle" size={20} color="#ff4444" />
+                            <Text style={styles.errorText}>{error}</Text>
+                        </View>
+                    ) : null}
+
+                    <View style={styles.inputContainer}>
+                        <Text style={styles.label}>Username</Text>
+                        <View style={styles.inputWrapper}>
+                            <Ionicons name="person-outline" size={20} color="rgba(255,255,255,0.7)" style={styles.inputIcon} />
+                            <TextInput
+                                style={[styles.input, Platform.OS === 'web' && { outlineStyle: 'none', boxShadow: 'none' } as any]}
+                                value={username}
+                                onChangeText={setUsername}
+                                placeholder="Enter your username"
+                                placeholderTextColor="rgba(255,255,255,0.5)"
+                                autoCapitalize="none"
+                                selectionColor="#fff"
+                            />
+                        </View>
+                    </View>
+
+                    <View style={styles.inputContainer}>
+                        <Text style={styles.label}>Password</Text>
+                        <View style={styles.inputWrapper}>
+                            <Ionicons name="lock-closed-outline" size={20} color="rgba(255,255,255,0.7)" style={styles.inputIcon} />
+                            <TextInput
+                                style={[styles.input, Platform.OS === 'web' && { outlineStyle: 'none', boxShadow: 'none' } as any]}
+                                value={password}
+                                onChangeText={setPassword}
+                                placeholder="Enter your password"
+                                placeholderTextColor="rgba(255,255,255,0.5)"
+                                secureTextEntry
+                                selectionColor="#fff"
+                            />
+                        </View>
+                    </View>
+
+                    <TouchableOpacity
+                        style={styles.button}
+                        onPress={handleAuth}
+                        disabled={loading}
+                    >
+                        {loading ? (
+                            <ActivityIndicator color="#fff" />
+                        ) : (
+                            <Text style={styles.buttonText}>{isLogin ? 'Sign In' : 'Sign Up'}</Text>
+                        )}
                     </TouchableOpacity>
-                </View>
+
+                    <View style={styles.footer}>
+                        <Text style={styles.footerText}>
+                            {isLogin ? "Don't have an account? " : "Already have an account? "}
+                        </Text>
+                        <TouchableOpacity onPress={() => setIsLogin(!isLogin)}>
+                            <Text style={styles.switchText}>
+                                {isLogin ? 'Sign Up' : 'Sign In'}
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                </BlurView>
             </View>
-        </View>
+        </KeyboardAvoidingView>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        // Transparent to show global galaxy background
+        backgroundColor: 'transparent',
+    },
+    centerWrapper: {
+        flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
         padding: 20,
+        zIndex: 10,
+        // Allows pointer events to pass through background clicks to the canvas
+        // (but only around the card, the card itself will capture pointers)
     },
-    card: {
+    glassCard: {
         width: '100%',
-        maxWidth: 400,
-        borderRadius: 20,
-        padding: 30,
+        maxWidth: 420,
+        borderRadius: 40, // Increased radius for pill-like shape in reference
+        padding: 40,
+        overflow: 'hidden',
+        borderWidth: 1.5,
+        borderColor: 'rgba(255, 255, 255, 0.15)',
+        borderTopColor: 'rgba(255, 255, 255, 0.4)', // White rim light on top 
+        borderLeftColor: 'rgba(255, 255, 255, 0.25)',
+        borderBottomColor: 'rgba(255, 255, 255, 0.05)', // Shadow rim logic on bottom
+        borderRightColor: 'rgba(255, 255, 255, 0.1)',
+        backgroundColor: 'transparent',
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
+        shadowOffset: { width: 0, height: 20 },
         shadowOpacity: 0.1,
-        shadowRadius: 10,
-        elevation: 5,
+        shadowRadius: 30,
+        elevation: 10,
     },
     header: {
         alignItems: 'center',
-        marginBottom: 30,
+        marginBottom: 40,
+    },
+    logoContainer: {
+        width: 80,
+        height: 80,
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 20,
+        position: 'relative',
+    },
+    ring: {
+        position: 'absolute',
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        borderWidth: 3,
+        borderColor: '#fff',
+        shadowColor: '#a855f7',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.6,
+        shadowRadius: 10,
+    },
+    ring1: {
+        left: 5,
+        borderColor: '#fff',
+    },
+    ring2: {
+        right: 5,
+        borderColor: '#9333ea', // Deep purple accent
     },
     title: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        marginTop: 15,
+        fontSize: 32,
+        fontWeight: '800',
+        color: '#ffffff',
+        letterSpacing: 0.5,
     },
     subtitle: {
         fontSize: 16,
+        color: 'rgba(255, 255, 255, 0.7)',
         marginTop: 5,
+        fontWeight: '500',
+        letterSpacing: 1,
+        textTransform: 'uppercase',
+    },
+    errorContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255, 68, 68, 0.1)',
+        padding: 12,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 68, 68, 0.3)',
+        marginBottom: 20,
+    },
+    errorText: {
+        color: '#ff4444',
+        marginLeft: 10,
+        fontSize: 14,
+        fontWeight: '500',
     },
     inputContainer: {
-        marginBottom: 20,
+        marginBottom: 24,
     },
     label: {
         fontSize: 14,
+        color: 'rgba(255, 255, 255, 0.9)',
         marginBottom: 8,
-        fontWeight: '500',
+        fontWeight: '600',
+        marginLeft: 4,
+    },
+    inputWrapper: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'transparent',
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.15)',
+    },
+    inputIcon: {
+        paddingHorizontal: 16,
     },
     input: {
-        height: 50,
-        borderRadius: 10,
-        paddingHorizontal: 15,
+        flex: 1,
+        height: 56,
+        color: '#ffffff',
         fontSize: 16,
+        paddingRight: 16,
     },
     button: {
-        height: 50,
-        borderRadius: 10,
+        height: 56,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.2)',
         justifyContent: 'center',
         alignItems: 'center',
         marginTop: 10,
+        shadowColor: '#fff',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+        elevation: 5,
     },
     buttonText: {
         color: '#ffffff',
         fontSize: 18,
         fontWeight: 'bold',
-    },
-    errorText: {
-        color: '#ff4444',
-        marginBottom: 15,
-        textAlign: 'center',
+        letterSpacing: 0.5,
     },
     footer: {
         flexDirection: 'row',
         justifyContent: 'center',
-        marginTop: 25,
+        marginTop: 30,
+        alignItems: 'center',
+    },
+    footerText: {
+        color: 'rgba(255, 255, 255, 0.7)',
+        fontSize: 15,
     },
     switchText: {
+        color: '#fff',
         fontWeight: 'bold',
+        fontSize: 15,
     },
 });

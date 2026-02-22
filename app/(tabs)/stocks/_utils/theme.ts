@@ -1,5 +1,5 @@
 export const STOCK_THEME = {
-    background: '#000000', // Pure black
+    background: 'transparent',
     card: '#1c1c1e', // iOS dark card
     text: '#FFFFFF',
     textSecondary: '#8e8e93',

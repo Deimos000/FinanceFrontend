@@ -21,7 +21,7 @@ export const Colors = {
     },
     dark: {
         text: '#FFFFFF',
-        background: '#000000', // Pitch Black
+        background: 'transparent', // Pitch Black is now transparent for Galaxy overlay
         tint: '#fff',
         icon: '#9BA1A6',
         tabIconDefault: '#9BA1A6',

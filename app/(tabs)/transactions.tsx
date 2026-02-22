@@ -7,6 +7,7 @@ import { RefreshControl, ScrollView, StatusBar, Text, TouchableOpacity, View } f
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/context/ThemeContext';
 import { createTransactionsStyles } from '@/app/styles/screens/transactions.styles';
+import TabScreenWrapper from '@/components/ui/TabScreenWrapper';
 
 export default function TransactionsScreen() {
     const insets = useSafeAreaInsets();
@@ -34,97 +35,99 @@ export default function TransactionsScreen() {
         : allTransactions;
 
     return (
-        <View style={[styles.container, { paddingTop: insets.top }]}>
-            <StatusBar barStyle={theme.text === '#FFFFFF' ? "light-content" : "dark-content"} />
+        <TabScreenWrapper>
+            <View style={[styles.container, { paddingTop: insets.top }]}>
+                <StatusBar barStyle={theme.text === '#FFFFFF' ? "light-content" : "dark-content"} />
 
-            <View style={[styles.header, { paddingHorizontal: 20 }]}>
-                <Text style={styles.title}>Transactions</Text>
-                <View style={styles.headerActions}>
-                    <TouchableOpacity style={styles.iconButton} onPress={onRefresh}>
-                        <Ionicons name="refresh" size={20} color={theme.text} />
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.iconButton}>
-                        <Ionicons name="filter" size={20} color={theme.text} />
-                    </TouchableOpacity>
-                </View>
-            </View>
-
-            <ScrollView
-                contentContainerStyle={styles.content}
-                refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />
-                }
-            >
-                {/* Account Filter (Horizontal Scroll) */}
-                <View>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.accountScrollContent}>
-                        <TouchableOpacity
-                            style={[
-                                styles.accountCard,
-                                !selectedAccount && { borderColor: theme.primary, backgroundColor: theme.primary + '10' }
-                            ]}
-                            onPress={() => setSelectedAccount(null)}
-                        >
-                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <Text style={styles.accountName}>All Accounts</Text>
-                                <Ionicons name="layers" size={18} color={!selectedAccount ? theme.primary : theme.icon} />
-                            </View>
-                            <Text style={styles.accountBalance}>
-                                {new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(
-                                    accounts.reduce((sum, a) => sum + a.balance, 0)
-                                )}
-                            </Text>
+                <View style={[styles.header, { paddingHorizontal: 20 }]}>
+                    <Text style={styles.title}>Transactions</Text>
+                    <View style={styles.headerActions}>
+                        <TouchableOpacity style={styles.iconButton} onPress={onRefresh}>
+                            <Ionicons name="refresh" size={20} color={theme.text} />
                         </TouchableOpacity>
+                        <TouchableOpacity style={styles.iconButton}>
+                            <Ionicons name="filter" size={20} color={theme.text} />
+                        </TouchableOpacity>
+                    </View>
+                </View>
 
-                        {accounts.map((account) => (
+                <ScrollView
+                    contentContainerStyle={styles.content}
+                    refreshControl={
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />
+                    }
+                >
+                    {/* Account Filter (Horizontal Scroll) */}
+                    <View>
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.accountScrollContent}>
                             <TouchableOpacity
-                                key={account.id}
                                 style={[
                                     styles.accountCard,
-                                    selectedAccount === account.id && { borderColor: theme.primary, backgroundColor: theme.primary + '10' }
+                                    !selectedAccount && { borderColor: theme.primary, backgroundColor: theme.primary + '10' }
                                 ]}
-                                onPress={() => setSelectedAccount(account.id === selectedAccount ? null : account.id)}
+                                onPress={() => setSelectedAccount(null)}
                             >
                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <Text style={styles.accountName} numberOfLines={1}>{account.name}</Text>
-                                    <Ionicons name="card-outline" size={18} color={selectedAccount === account.id ? theme.primary : theme.icon} />
+                                    <Text style={styles.accountName}>All Accounts</Text>
+                                    <Ionicons name="layers" size={18} color={!selectedAccount ? theme.primary : theme.icon} />
                                 </View>
-                                <View>
-                                    <Text style={styles.accountIban} numberOfLines={1}>{account.iban}</Text>
-                                    <Text style={styles.accountBalance}>
-                                        {new Intl.NumberFormat('de-DE', { style: 'currency', currency: account.currency }).format(account.balance)}
-                                    </Text>
-                                </View>
+                                <Text style={styles.accountBalance}>
+                                    {new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(
+                                        accounts.reduce((sum, a) => sum + a.balance, 0)
+                                    )}
+                                </Text>
                             </TouchableOpacity>
+
+                            {accounts.map((account) => (
+                                <TouchableOpacity
+                                    key={account.id}
+                                    style={[
+                                        styles.accountCard,
+                                        selectedAccount === account.id && { borderColor: theme.primary, backgroundColor: theme.primary + '10' }
+                                    ]}
+                                    onPress={() => setSelectedAccount(account.id === selectedAccount ? null : account.id)}
+                                >
+                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <Text style={styles.accountName} numberOfLines={1}>{account.name}</Text>
+                                        <Ionicons name="card-outline" size={18} color={selectedAccount === account.id ? theme.primary : theme.icon} />
+                                    </View>
+                                    <View>
+                                        <Text style={styles.accountIban} numberOfLines={1}>{account.iban}</Text>
+                                        <Text style={styles.accountBalance}>
+                                            {new Intl.NumberFormat('de-DE', { style: 'currency', currency: account.currency }).format(account.balance)}
+                                        </Text>
+                                    </View>
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
+                    </View>
+
+                    {/* Transactions List */}
+                    <View style={styles.transactionsList}>
+                        <Text style={styles.sectionTitle}>
+                            {selectedAccount ? 'Account Activity' : 'Recent Activity'}
+                        </Text>
+
+                        {displayedTransactions.length === 0 && !loading && (
+                            <Text style={styles.noTransactionsText}>No transactions found.</Text>
+                        )}
+
+                        {displayedTransactions.map((t, i) => (
+                            <TransactionRow
+                                key={t.id}
+                                id={t.id}
+                                title={t.recipient || t.booking_text || 'Unknown'}
+                                amount={t.amount}
+                                date={new Date(t.date).toLocaleDateString()}
+                                categoryColor={theme.primary}
+                                lastItem={i === displayedTransactions.length - 1}
+                                onPress={() => { }}
+                            />
                         ))}
-                    </ScrollView>
-                </View>
+                    </View>
 
-                {/* Transactions List */}
-                <View style={styles.transactionsList}>
-                    <Text style={styles.sectionTitle}>
-                        {selectedAccount ? 'Account Activity' : 'Recent Activity'}
-                    </Text>
-
-                    {displayedTransactions.length === 0 && !loading && (
-                        <Text style={styles.noTransactionsText}>No transactions found.</Text>
-                    )}
-
-                    {displayedTransactions.map((t, i) => (
-                        <TransactionRow
-                            key={t.id}
-                            id={t.id}
-                            title={t.recipient || t.booking_text || 'Unknown'}
-                            amount={t.amount}
-                            date={new Date(t.date).toLocaleDateString()}
-                            categoryColor={theme.primary}
-                            lastItem={i === displayedTransactions.length - 1}
-                            onPress={() => { }}
-                        />
-                    ))}
-                </View>
-
-            </ScrollView>
-        </View>
+                </ScrollView>
+            </View>
+        </TabScreenWrapper>
     );
 }

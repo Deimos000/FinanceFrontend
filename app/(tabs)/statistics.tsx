@@ -33,6 +33,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useIsDesktop } from '@/hooks/useIsDesktop';
+import TabScreenWrapper from '@/components/ui/TabScreenWrapper';
 
 type Tab = 'overview' | 'transactions' | 'budget';
 
@@ -456,224 +457,228 @@ export default function StatisticsScreen() {
     // ─── Desktop Layout ───────────────────────────────────
     if (isDesktop) {
         return (
-            <View style={[styles.container, { paddingTop: 20 }]}>
-                <StatusBar barStyle={theme.text === '#FFFFFF' ? "light-content" : "dark-content"} />
-                <ScrollView
-                    contentContainerStyle={{ paddingHorizontal: 32, paddingBottom: 40, maxWidth: 1200, alignSelf: 'center' as any, width: '100%' as any }}
-                    showsVerticalScrollIndicator={false}
-                    refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />}
-                >
-                    {/* Header */}
-                    <View style={styles.header}>
-                        <View style={styles.headerTop}>
-                            <Text style={[styles.title, { fontSize: 32 }]}>Statistics</Text>
-                            <TouchableOpacity onPress={handleAutoCategorize} disabled={categorizing} style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: theme.primary + '20', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12 }}>
-                                {categorizing ? <ActivityIndicator size="small" color={theme.primary} /> : (
-                                    <><Ionicons name="sparkles" size={16} color={theme.primary} style={{ marginRight: 6 }} /><Text style={{ color: theme.primary, fontWeight: '600', fontSize: 13 }}>Auto-Categorize</Text></>
-                                )}
-                            </TouchableOpacity>
-                        </View>
-                        <TimeRangeSelector selectedRange={timeRange} onSelectRange={setTimeRange} />
-                        {/* Tabs: Overview / Transactions / Budget */}
-                        <View style={styles.tabContainer}>
-                            {(['overview', 'transactions', 'budget'] as Tab[]).map(tab => (
-                                <TouchableOpacity
-                                    key={tab}
-                                    style={[styles.tabButton, activeTab === tab && styles.activeTab]}
-                                    onPress={() => setActiveTab(tab)}
-                                >
-                                    <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>
-                                        {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
-                    </View>
-
-                    {loading ? (
-                        <View style={{ paddingTop: 40, alignItems: 'center' }}>
-                            <ActivityIndicator size="large" color={theme.primary} />
-                        </View>
-                    ) : activeTab === 'overview' ? (
-                        <>
-                            {/* Spending Breakdown – pie chart LEFT, list RIGHT */}
-                            <View style={styles.card}>
-                                <Text style={styles.cardTitle}>Spending Breakdown</Text>
-                                <CategoryBreakdown
-                                    data={categorySpending}
-                                    total={totalSpending}
-                                    onCategoryPress={setSelectedCategoryDetails}
-                                    horizontal={true}
-                                    categoryBudgets={categoryBudgets}
-                                />
-                            </View>
-
-                            {/* Spending Trends – full width */}
-                            <View style={styles.card}>
-                                <Text style={styles.cardTitle}>Spending Trends</Text>
-                                <TrendChart data={categoryTrends} categoryColors={categoryColors} width={contentWidth - 40} timeRange={timeRange} />
-                            </View>
-
-                            {/* Uncategorized */}
-                            {uncategorized.length > 0 && (
-                                <View style={styles.card}>
-                                    <Text style={styles.cardTitle}>Uncategorized ({uncategorized.length})</Text>
-                                    {uncategorized.map((tx: any) => (
-                                        <TouchableOpacity key={tx.transaction_id} style={styles.uncategorizedItem} onPress={() => openCategoryPicker(tx)}>
-                                            <Ionicons name="help-circle" size={20} color={theme.icon} style={{ marginRight: 12 }} />
-                                            <View style={{ flex: 1 }}>
-                                                <Text style={{ color: theme.text, fontWeight: '500' }}>{tx.recipient || tx.creditor_name || tx.remittance_information || 'Unknown'}</Text>
-                                                <Text style={{ color: theme.icon, fontSize: 12 }}>{new Date(tx.date).toLocaleDateString()}</Text>
-                                            </View>
-                                            <Text style={{ color: theme.danger, fontWeight: '600' }}>{tx.amount?.toFixed(2)}€</Text>
-                                        </TouchableOpacity>
-                                    ))}
-                                </View>
-                            )}
-                        </>
-                    ) : activeTab === 'budget' ? (
-                        <BudgetSection
-                            currentSpending={currentSpendingMap}
-                            chartWidth={contentWidth}
-                            onBudgetsUpdated={setCategoryBudgets}
-                        />
-                    ) : (
-                        <TransactionList transactions={allTransactions} onTransactionPress={openCategoryPicker} />
-                    )}
-                </ScrollView>
-
-                {categoryPickerModal}
-                {categoryDetailsModal}
-            </View>
-        );
-    }
-
-    // ─── Mobile Layout (unchanged) ────────────────────────
-    return (
-        <View style={[styles.container, { paddingTop: insets.top }]}>
-            <StatusBar barStyle={theme.text === '#FFFFFF' ? "light-content" : "dark-content"} />
-
-            <View style={styles.header}>
-                <View style={styles.headerTop}>
-                    <Text style={styles.title}>Statistics</Text>
-                    <TouchableOpacity
-                        onPress={handleAutoCategorize}
-                        disabled={categorizing}
-                        style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            backgroundColor: theme.primary + '20',
-                            paddingHorizontal: 12,
-                            paddingVertical: 8,
-                            borderRadius: 12
-                        }}
+            <TabScreenWrapper>
+                <View style={[styles.container, { paddingTop: 20 }]}>
+                    <StatusBar barStyle={theme.text === '#FFFFFF' ? "light-content" : "dark-content"} />
+                    <ScrollView
+                        contentContainerStyle={{ paddingHorizontal: 32, paddingBottom: 40, maxWidth: 1200, alignSelf: 'center' as any, width: '100%' as any }}
+                        showsVerticalScrollIndicator={false}
+                        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />}
                     >
-                        {categorizing ? <ActivityIndicator size="small" color={theme.primary} /> : (
+                        {/* Header */}
+                        <View style={styles.header}>
+                            <View style={styles.headerTop}>
+                                <Text style={[styles.title, { fontSize: 32 }]}>Statistics</Text>
+                                <TouchableOpacity onPress={handleAutoCategorize} disabled={categorizing} style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: theme.primary + '20', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12 }}>
+                                    {categorizing ? <ActivityIndicator size="small" color={theme.primary} /> : (
+                                        <><Ionicons name="sparkles" size={16} color={theme.primary} style={{ marginRight: 6 }} /><Text style={{ color: theme.primary, fontWeight: '600', fontSize: 13 }}>Auto-Categorize</Text></>
+                                    )}
+                                </TouchableOpacity>
+                            </View>
+                            <TimeRangeSelector selectedRange={timeRange} onSelectRange={setTimeRange} />
+                            {/* Tabs: Overview / Transactions / Budget */}
+                            <View style={styles.tabContainer}>
+                                {(['overview', 'transactions', 'budget'] as Tab[]).map(tab => (
+                                    <TouchableOpacity
+                                        key={tab}
+                                        style={[styles.tabButton, activeTab === tab && styles.activeTab]}
+                                        onPress={() => setActiveTab(tab)}
+                                    >
+                                        <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>
+                                            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                                        </Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        </View>
+
+                        {loading ? (
+                            <View style={{ paddingTop: 40, alignItems: 'center' }}>
+                                <ActivityIndicator size="large" color={theme.primary} />
+                            </View>
+                        ) : activeTab === 'overview' ? (
                             <>
-                                <Ionicons name="sparkles" size={16} color={theme.primary} style={{ marginRight: 6 }} />
-                                <Text style={{ color: theme.primary, fontWeight: '600', fontSize: 13 }}>Auto-Categorize</Text>
-                            </>
-                        )}
-                    </TouchableOpacity>
-                </View>
-
-                <View style={styles.tabContainer}>
-                    {(['overview', 'transactions'] as Tab[]).map(tab => (
-                        <TouchableOpacity
-                            key={tab}
-                            style={[styles.tabButton, activeTab === tab && styles.activeTab]}
-                            onPress={() => setActiveTab(tab)}
-                        >
-                            <Text style={[styles.tabText, { color: activeTab === tab ? '#FFF' : theme.text }]}>
-                                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                            </Text>
-                        </TouchableOpacity>
-                    ))}
-                </View>
-
-                <TimeRangeSelector selectedRange={timeRange} onSelectRange={setTimeRange} />
-            </View>
-
-            <ScrollView
-                contentContainerStyle={styles.scrollContent}
-                showsVerticalScrollIndicator={false}
-                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-            >
-                {loading ? (
-                    <ActivityIndicator style={{ marginTop: 40 }} size="large" color={theme.primary} />
-                ) : (
-                    <>
-                        {activeTab === 'overview' ? (
-                            <>
+                                {/* Spending Breakdown – pie chart LEFT, list RIGHT */}
                                 <View style={styles.card}>
                                     <Text style={styles.cardTitle}>Spending Breakdown</Text>
                                     <CategoryBreakdown
                                         data={categorySpending}
                                         total={totalSpending}
                                         onCategoryPress={setSelectedCategoryDetails}
+                                        horizontal={true}
+                                        categoryBudgets={categoryBudgets}
                                     />
                                 </View>
 
+                                {/* Spending Trends – full width */}
                                 <View style={styles.card}>
-                                    <Text style={styles.cardTitle}>Spending Trend (By Category)</Text>
-                                    <View style={{ overflow: 'hidden' }}>
-                                        <TrendChart data={categoryTrends} categoryColors={categoryColors} timeRange={timeRange} />
-                                    </View>
+                                    <Text style={styles.cardTitle}>Spending Trends</Text>
+                                    <TrendChart data={categoryTrends} categoryColors={categoryColors} width={contentWidth - 40} timeRange={timeRange} />
                                 </View>
 
+                                {/* Uncategorized */}
                                 {uncategorized.length > 0 && (
                                     <View style={styles.card}>
-                                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                                            <Text style={styles.cardTitle}>Uncategorized ({uncategorized.length})</Text>
-                                            <TouchableOpacity onPress={() => setActiveTab('transactions')}>
-                                                <Text style={{ color: theme.primary }}>View All</Text>
-                                            </TouchableOpacity>
-                                        </View>
-
-                                        {uncategorized.slice(0, 3).map((tx, idx) => (
-                                            <TouchableOpacity
-                                                key={idx}
-                                                style={styles.uncategorizedItem}
-                                                onPress={() => openCategoryPicker(tx)}
-                                            >
-                                                <View style={{
-                                                    width: 40, height: 40, borderRadius: 20,
-                                                    backgroundColor: '#FF980020',
-                                                    alignItems: 'center', justifyContent: 'center',
-                                                    marginRight: 12
-                                                }}>
-                                                    <Ionicons name="help" size={20} color="#FF9800" />
-                                                </View>
+                                        <Text style={styles.cardTitle}>Uncategorized ({uncategorized.length})</Text>
+                                        {uncategorized.map((tx: any) => (
+                                            <TouchableOpacity key={tx.transaction_id} style={styles.uncategorizedItem} onPress={() => openCategoryPicker(tx)}>
+                                                <Ionicons name="help-circle" size={20} color={theme.icon} style={{ marginRight: 12 }} />
                                                 <View style={{ flex: 1 }}>
-                                                    <Text style={{ color: theme.text, fontSize: 16, fontWeight: '500' }} numberOfLines={1}>
-                                                        {tx.remittance_information || tx.creditor_name || 'Unknown'}
-                                                    </Text>
-                                                    <Text style={{ color: theme.icon, fontSize: 12 }}>
-                                                        {new Date(tx.booking_date).toLocaleDateString()}
-                                                    </Text>
+                                                    <Text style={{ color: theme.text, fontWeight: '500' }}>{tx.recipient || tx.creditor_name || tx.remittance_information || 'Unknown'}</Text>
+                                                    <Text style={{ color: theme.icon, fontSize: 12 }}>{new Date(tx.date).toLocaleDateString()}</Text>
                                                 </View>
+                                                <Text style={{ color: theme.danger, fontWeight: '600' }}>{tx.amount?.toFixed(2)}€</Text>
                                             </TouchableOpacity>
                                         ))}
                                     </View>
                                 )}
                             </>
+                        ) : activeTab === 'budget' ? (
+                            <BudgetSection
+                                currentSpending={currentSpendingMap}
+                                chartWidth={contentWidth}
+                                onBudgetsUpdated={setCategoryBudgets}
+                            />
                         ) : (
-                            <View>
-                                <Text style={{ color: theme.icon, marginBottom: 10, textAlign: 'center' }}>
-                                    {allTransactions.length} transactions in this period
-                                </Text>
-                                <TransactionList
-                                    transactions={allTransactions}
-                                    onTransactionPress={openCategoryPicker}
-                                />
-                            </View>
+                            <TransactionList transactions={allTransactions} onTransactionPress={openCategoryPicker} />
                         )}
-                    </>
-                )}
-            </ScrollView>
+                    </ScrollView>
 
-            {categoryPickerModal}
-            {categoryDetailsModal}
-        </View>
+                    {categoryPickerModal}
+                    {categoryDetailsModal}
+                </View>
+            </TabScreenWrapper>
+        );
+    }
+
+    // ─── Mobile Layout (unchanged) ────────────────────────
+    return (
+        <TabScreenWrapper>
+            <View style={[styles.container, { paddingTop: insets.top }]}>
+                <StatusBar barStyle={theme.text === '#FFFFFF' ? "light-content" : "dark-content"} />
+
+                <View style={styles.header}>
+                    <View style={styles.headerTop}>
+                        <Text style={styles.title}>Statistics</Text>
+                        <TouchableOpacity
+                            onPress={handleAutoCategorize}
+                            disabled={categorizing}
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                backgroundColor: theme.primary + '20',
+                                paddingHorizontal: 12,
+                                paddingVertical: 8,
+                                borderRadius: 12
+                            }}
+                        >
+                            {categorizing ? <ActivityIndicator size="small" color={theme.primary} /> : (
+                                <>
+                                    <Ionicons name="sparkles" size={16} color={theme.primary} style={{ marginRight: 6 }} />
+                                    <Text style={{ color: theme.primary, fontWeight: '600', fontSize: 13 }}>Auto-Categorize</Text>
+                                </>
+                            )}
+                        </TouchableOpacity>
+                    </View>
+
+                    <View style={styles.tabContainer}>
+                        {(['overview', 'transactions'] as Tab[]).map(tab => (
+                            <TouchableOpacity
+                                key={tab}
+                                style={[styles.tabButton, activeTab === tab && styles.activeTab]}
+                                onPress={() => setActiveTab(tab)}
+                            >
+                                <Text style={[styles.tabText, { color: activeTab === tab ? '#FFF' : theme.text }]}>
+                                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+
+                    <TimeRangeSelector selectedRange={timeRange} onSelectRange={setTimeRange} />
+                </View>
+
+                <ScrollView
+                    contentContainerStyle={styles.scrollContent}
+                    showsVerticalScrollIndicator={false}
+                    refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+                >
+                    {loading ? (
+                        <ActivityIndicator style={{ marginTop: 40 }} size="large" color={theme.primary} />
+                    ) : (
+                        <>
+                            {activeTab === 'overview' ? (
+                                <>
+                                    <View style={styles.card}>
+                                        <Text style={styles.cardTitle}>Spending Breakdown</Text>
+                                        <CategoryBreakdown
+                                            data={categorySpending}
+                                            total={totalSpending}
+                                            onCategoryPress={setSelectedCategoryDetails}
+                                        />
+                                    </View>
+
+                                    <View style={styles.card}>
+                                        <Text style={styles.cardTitle}>Spending Trend (By Category)</Text>
+                                        <View style={{ overflow: 'hidden' }}>
+                                            <TrendChart data={categoryTrends} categoryColors={categoryColors} timeRange={timeRange} />
+                                        </View>
+                                    </View>
+
+                                    {uncategorized.length > 0 && (
+                                        <View style={styles.card}>
+                                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                                                <Text style={styles.cardTitle}>Uncategorized ({uncategorized.length})</Text>
+                                                <TouchableOpacity onPress={() => setActiveTab('transactions')}>
+                                                    <Text style={{ color: theme.primary }}>View All</Text>
+                                                </TouchableOpacity>
+                                            </View>
+
+                                            {uncategorized.slice(0, 3).map((tx, idx) => (
+                                                <TouchableOpacity
+                                                    key={idx}
+                                                    style={styles.uncategorizedItem}
+                                                    onPress={() => openCategoryPicker(tx)}
+                                                >
+                                                    <View style={{
+                                                        width: 40, height: 40, borderRadius: 20,
+                                                        backgroundColor: '#FF980020',
+                                                        alignItems: 'center', justifyContent: 'center',
+                                                        marginRight: 12
+                                                    }}>
+                                                        <Ionicons name="help" size={20} color="#FF9800" />
+                                                    </View>
+                                                    <View style={{ flex: 1 }}>
+                                                        <Text style={{ color: theme.text, fontSize: 16, fontWeight: '500' }} numberOfLines={1}>
+                                                            {tx.remittance_information || tx.creditor_name || 'Unknown'}
+                                                        </Text>
+                                                        <Text style={{ color: theme.icon, fontSize: 12 }}>
+                                                            {new Date(tx.booking_date).toLocaleDateString()}
+                                                        </Text>
+                                                    </View>
+                                                </TouchableOpacity>
+                                            ))}
+                                        </View>
+                                    )}
+                                </>
+                            ) : (
+                                <View>
+                                    <Text style={{ color: theme.icon, marginBottom: 10, textAlign: 'center' }}>
+                                        {allTransactions.length} transactions in this period
+                                    </Text>
+                                    <TransactionList
+                                        transactions={allTransactions}
+                                        onTransactionPress={openCategoryPicker}
+                                    />
+                                </View>
+                            )}
+                        </>
+                    )}
+                </ScrollView>
+
+                {categoryPickerModal}
+                {categoryDetailsModal}
+            </View>
+        </TabScreenWrapper>
     );
 }

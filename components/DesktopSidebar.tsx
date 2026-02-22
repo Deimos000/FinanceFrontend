@@ -53,7 +53,7 @@ export default function DesktopSidebar() {
                                 styles.navItem,
                                 active && styles.navItemActive,
                             ]}
-                            onPress={() => router.push(item.route as any)}
+                            onPress={() => router.navigate(item.route as any)}
                             activeOpacity={0.7}
                         >
                             {active && (

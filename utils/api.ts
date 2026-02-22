@@ -9,7 +9,7 @@
  */
 
 import { Platform } from 'react-native';
-import * as SecureStore from 'expo-secure-store';
+import * as SecureStore from './storage';
 
 // ── Configure your backend URL here ─────────────────────
 // On Android emulator localhost maps differently, use 10.0.2.2
@@ -25,7 +25,7 @@ export const BACKEND_URL = process.env.EXPO_PUBLIC_API_URL || DEV_URL;
 
 // ── Generic fetch helper ─────────────────────────────────
 
-async function api<T = any>(
+export async function api<T = any>(
     path: string,
     options: RequestInit = {},
 ): Promise<T> {
@@ -266,3 +266,36 @@ export const yahooQuote = (
     api(
         `/api/yahoo-proxy?type=quote&symbol=${symbol}&interval=${interval}&range=${range}`,
     );
+
+// ── Friends ──────────────────────────────────────────────
+
+export const searchUsers = (q: string) =>
+    api<{ users: { id: number; username: string }[] }>(
+        `/api/friends/search?q=${encodeURIComponent(q)}`
+    );
+
+export const sendFriendRequest = (username: string) =>
+    api<{ ok: boolean; message: string }>('/api/friends/request', {
+        method: 'POST',
+        body: JSON.stringify({ username }),
+    });
+
+export const getFriendRequests = () =>
+    api<{
+        incoming: { id: number; requester_id: number; requester_username: string; created_at: string }[];
+        outgoing: { id: number; addressee_id: number; addressee_username: string; created_at: string }[];
+    }>('/api/friends/requests');
+
+export const respondToFriendRequest = (friendshipId: number, action: 'accept' | 'reject') =>
+    api<{ ok: boolean; status: string }>('/api/friends/respond', {
+        method: 'POST',
+        body: JSON.stringify({ friendship_id: friendshipId, action }),
+    });
+
+export const getFriends = () =>
+    api<{ friends: { friendship_id: number; friend_id: number; friend_username: string; since: string }[] }>(
+        '/api/friends'
+    );
+
+export const removeFriend = (friendshipId: number) =>
+    api(`/api/friends/${friendshipId}`, { method: 'DELETE' });

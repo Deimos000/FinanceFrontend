@@ -1,17 +1,18 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, ScrollView, StatusBar, StyleSheet, Text, TextInput, View, Modal, TouchableOpacity, Alert } from 'react-native';
+import { ActivityIndicator, FlatList, ScrollView, StatusBar, StyleSheet, Text, TextInput, View, Modal, TouchableOpacity, Alert, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useDebounce } from './_utils/useDebounce';
 
-import { searchStocks, getSandboxes, createSandbox, deleteSandbox, getMarketMovers } from './_utils/api';
+import { searchStocks, getSandboxes, createSandbox, deleteSandbox, getMarketMovers, getSharedSandboxes } from './_utils/api';
 import { useStockStore } from './_utils/store';
 import { Stock, Sandbox } from './_utils/types';
 
 import { StockListItem } from './_components/StockListItem';
 import { WatchlistCard } from './_components/WatchlistCard';
+import ShareSandboxModal from './_components/ShareSandboxModal';
 import { useTheme } from '@/context/ThemeContext';
 import { useIsDesktop } from '@/hooks/useIsDesktop';
 
@@ -32,9 +33,14 @@ export default function StocksOverview() {
 
     // Sandbox State
     const [sandboxes, setSandboxes] = useState<Sandbox[]>([]);
+    const [sharedSandboxes, setSharedSandboxes] = useState<Sandbox[]>([]);
     const [modalVisible, setModalVisible] = useState(false);
     const [newSandboxName, setNewSandboxName] = useState('');
     const [newSandboxBalance, setNewSandboxBalance] = useState(10000);
+
+    // Share Modal State
+    const [shareModalVisible, setShareModalVisible] = useState(false);
+    const [shareTargetSandbox, setShareTargetSandbox] = useState<Sandbox | null>(null);
 
     useEffect(() => {
         loadSandboxes();
@@ -42,9 +48,13 @@ export default function StocksOverview() {
     }, []);
 
     const loadSandboxes = async () => {
-        const data = await getSandboxes();
+        const [data, shared] = await Promise.all([
+            getSandboxes(),
+            getSharedSandboxes()
+        ]);
         console.log('Sandbox Data:', JSON.stringify(data, null, 2));
         setSandboxes(data);
+        setSharedSandboxes(shared);
     };
 
     const loadMarketMovers = async () => {
@@ -62,21 +72,27 @@ export default function StocksOverview() {
     };
 
     const handleDeleteSandbox = (sandbox: Sandbox) => {
-        Alert.alert(
-            'Delete Sandbox',
-            `Are you sure you want to delete "${sandbox.name}"? This cannot be undone.`,
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Delete',
-                    style: 'destructive',
-                    onPress: async () => {
-                        await deleteSandbox(sandbox.id);
-                        loadSandboxes();
-                    },
-                },
-            ]
-        );
+        const doDelete = async () => {
+            await deleteSandbox(sandbox.id);
+            loadSandboxes();
+        };
+        if (Platform.OS === 'web') {
+            if (window.confirm(`Delete "${sandbox.name}"? This cannot be undone.`)) doDelete();
+        } else {
+            Alert.alert(
+                'Delete Sandbox',
+                `Are you sure you want to delete "${sandbox.name}"? This cannot be undone.`,
+                [
+                    { text: 'Cancel', style: 'cancel' },
+                    { text: 'Delete', style: 'destructive', onPress: doDelete },
+                ]
+            );
+        }
+    };
+
+    const handleShareSandbox = (sandbox: Sandbox) => {
+        setShareTargetSandbox(sandbox);
+        setShareModalVisible(true);
     };
 
     const formatCompactMoney = (amount: number) => {
@@ -239,14 +255,17 @@ export default function StocksOverview() {
                                                     return (
                                                         <TouchableOpacity key={sb.id} onPress={() => router.push(`/stocks/sandbox/${sb.id}`)} onLongPress={() => handleDeleteSandbox(sb)}
                                                             style={{ backgroundColor: theme.background, borderRadius: 12, padding: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                            <View>
+                                                            <View style={{ flex: 1 }}>
                                                                 <Text style={{ color: theme.text, fontWeight: '700', fontSize: 16 }}>{sb.name}</Text>
                                                                 <Text style={{ color: theme.icon, fontSize: 13, marginTop: 4 }}>Equity: ${(sb.total_equity ?? sb.balance).toLocaleString()}</Text>
                                                             </View>
-                                                            <View style={{ alignItems: 'flex-end' }}>
+                                                            <View style={{ alignItems: 'flex-end', marginRight: 12 }}>
                                                                 <Text style={{ color: isUp ? theme.secondary : theme.danger, fontSize: 16, fontWeight: '700' }}>{isUp ? '+' : ''}{pnlPercent.toFixed(2)}%</Text>
                                                                 <Text style={{ color: isUp ? theme.secondary : theme.danger, fontSize: 12, opacity: 0.8 }}>{isUp ? '+' : ''}{pnl.toFixed(2)}</Text>
                                                             </View>
+                                                            <TouchableOpacity onPress={() => handleShareSandbox(sb)} style={{ padding: 8 }}>
+                                                                <Ionicons name="share-outline" size={20} color={theme.primary} />
+                                                            </TouchableOpacity>
                                                         </TouchableOpacity>
                                                     );
                                                 })}
@@ -254,6 +273,43 @@ export default function StocksOverview() {
                                         )}
                                     </ScrollView>
                                 </View>
+
+                                {/* Shared Sandboxes Card */}
+                                {sharedSandboxes.length > 0 && (
+                                    <View style={{ flex: 1, backgroundColor: '#1A0B2E', borderRadius: 20, padding: 24, maxHeight: 400, marginTop: 16 }}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+                                            <View style={{ padding: 8, borderRadius: 8, backgroundColor: '#FFA50020' }}>
+                                                <Ionicons name="people" size={20} color="#FFA500" />
+                                            </View>
+                                            <Text style={{ fontSize: 22, fontWeight: '700', color: theme.text }}>Shared With Me</Text>
+                                        </View>
+                                        <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={true} nestedScrollEnabled={true}>
+                                            <View style={{ gap: 12 }}>
+                                                {sharedSandboxes.map((sb) => {
+                                                    const { pnl, pnlPercent } = getSandboxPnL(sb);
+                                                    const isUp = pnl >= 0;
+                                                    return (
+                                                        <TouchableOpacity key={`shared-${sb.id}`} onPress={() => router.push(`/stocks/sandbox/${sb.id}`)}
+                                                            style={{ backgroundColor: theme.background, borderRadius: 12, padding: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                            <View style={{ flex: 1 }}>
+                                                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                                                    <Text style={{ color: theme.text, fontWeight: '700', fontSize: 16 }}>{sb.name}</Text>
+                                                                    <View style={{ backgroundColor: sb.permission === 'edit' ? '#4cd96420' : theme.primary + '20', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
+                                                                        <Text style={{ color: sb.permission === 'edit' ? '#4cd964' : theme.primary, fontSize: 10, fontWeight: '600', textTransform: 'uppercase' }}>{sb.permission}</Text>
+                                                                    </View>
+                                                                </View>
+                                                                <Text style={{ color: theme.icon, fontSize: 12, marginTop: 4 }}>by {sb.owner_username}</Text>
+                                                            </View>
+                                                            <View style={{ alignItems: 'flex-end' }}>
+                                                                <Text style={{ color: isUp ? theme.secondary : theme.danger, fontSize: 16, fontWeight: '700' }}>{isUp ? '+' : ''}{pnlPercent.toFixed(2)}%</Text>
+                                                            </View>
+                                                        </TouchableOpacity>
+                                                    );
+                                                })}
+                                            </View>
+                                        </ScrollView>
+                                    </View>
+                                )}
 
                                 {/* Watchlist Card */}
                                 <View style={{ flex: 1, backgroundColor: '#1A0B2E', borderRadius: 20, padding: 24, height: 500 }}>
@@ -322,6 +378,16 @@ export default function StocksOverview() {
                         </View>
                     </View>
                 </Modal>
+
+                {/* Share Sandbox Modal */}
+                {shareTargetSandbox && (
+                    <ShareSandboxModal
+                        visible={shareModalVisible}
+                        sandboxId={shareTargetSandbox.id}
+                        sandboxName={shareTargetSandbox.name}
+                        onClose={() => { setShareModalVisible(false); setShareTargetSandbox(null); }}
+                    />
+                )}
             </View>
         );
     }
@@ -389,6 +455,9 @@ export default function StocksOverview() {
                                                     <Ionicons name="flask" size={16} color={theme.primary} />
                                                 </View>
                                                 <Text style={[styles.sandboxName, { color: theme.text }]} numberOfLines={1}>{sandbox.name}</Text>
+                                                <TouchableOpacity onPress={() => handleShareSandbox(sandbox)} style={{ padding: 4 }}>
+                                                    <Ionicons name="share-outline" size={16} color={theme.primary} />
+                                                </TouchableOpacity>
                                             </View>
                                             <Text style={[styles.sandboxBalance, { color: theme.text }]}>
                                                 {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(sandbox.total_equity ?? sandbox.balance)}
@@ -404,6 +473,50 @@ export default function StocksOverview() {
                                 })}
                             </ScrollView>
                         )}
+                    </View>
+                )}
+
+                {/* Shared Sandboxes Section - Mobile */}
+                {!query && sharedSandboxes.length > 0 && (
+                    <View style={styles.section}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12, gap: 8 }}>
+                            <Ionicons name="people" size={18} color="#FFA500" />
+                            <Text style={[styles.sectionTitle, { color: theme.text, marginBottom: 0 }]}>Shared With Me</Text>
+                        </View>
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                            {sharedSandboxes.map(sandbox => {
+                                const { pnl, pnlPercent } = getSandboxPnL(sandbox);
+                                const isPnlPositive = pnl >= 0;
+                                return (
+                                    <TouchableOpacity
+                                        key={`shared-${sandbox.id}`}
+                                        style={[styles.sandboxCard, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}
+                                        onPress={() => router.push({ pathname: `/stocks/sandbox/[id]`, params: { id: sandbox.id, name: sandbox.name } })}
+                                    >
+                                        <View style={styles.sandboxCardHeader}>
+                                            <View style={[styles.sandboxIconBadge, { backgroundColor: '#FFA50020' }]}>
+                                                <Ionicons name="people" size={14} color="#FFA500" />
+                                            </View>
+                                            <Text style={[styles.sandboxName, { color: theme.text }]} numberOfLines={1}>{sandbox.name}</Text>
+                                        </View>
+                                        <Text style={{ color: theme.icon, fontSize: 11, marginBottom: 4 }}>by {sandbox.owner_username}</Text>
+                                        <Text style={[styles.sandboxBalance, { color: theme.text, fontSize: 18 }]}>
+                                            {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(sandbox.total_equity ?? sandbox.balance)}
+                                        </Text>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                            <View style={[styles.pnlBadge, { backgroundColor: isPnlPositive ? theme.secondary + '18' : theme.danger + '18' }]}>
+                                                <Text style={{ color: isPnlPositive ? theme.secondary : theme.danger, fontSize: 11, fontWeight: '600' }}>
+                                                    {isPnlPositive ? '+' : ''}{pnlPercent.toFixed(1)}%
+                                                </Text>
+                                            </View>
+                                            <View style={{ backgroundColor: sandbox.permission === 'edit' ? '#4cd96420' : theme.primary + '20', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
+                                                <Text style={{ color: sandbox.permission === 'edit' ? '#4cd964' : theme.primary, fontSize: 10, fontWeight: '600', textTransform: 'uppercase' }}>{sandbox.permission}</Text>
+                                            </View>
+                                        </View>
+                                    </TouchableOpacity>
+                                );
+                            })}
+                        </ScrollView>
                     </View>
                 )}
 
@@ -511,6 +624,16 @@ export default function StocksOverview() {
                     </View>
                 </View>
             </Modal>
+
+            {/* Share Sandbox Modal */}
+            {shareTargetSandbox && (
+                <ShareSandboxModal
+                    visible={shareModalVisible}
+                    sandboxId={shareTargetSandbox.id}
+                    sandboxName={shareTargetSandbox.name}
+                    onClose={() => { setShareModalVisible(false); setShareTargetSandbox(null); }}
+                />
+            )}
         </View>
     );
 }

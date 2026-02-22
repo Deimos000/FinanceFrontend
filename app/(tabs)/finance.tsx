@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
+import TabScreenWrapper from '@/components/ui/TabScreenWrapper';
 
 export default function FinanceScreen() {
     const colorScheme = useColorScheme();
@@ -95,82 +96,84 @@ export default function FinanceScreen() {
     const hasCashAccount = accounts.some(a => a.account_id === 'CASH_ACCOUNT');
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.background }]}>
-            <View style={[styles.header, { backgroundColor: theme.cardBackground, borderBottomColor: theme.border }]}>
-                <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: 8 }}>
-                    <Text style={{ color: theme.icon, fontSize: 12 }}>
-                        {isRefreshing ? 'Syncing...' : 'Sync Data'}
-                    </Text>
-                    <TouchableOpacity onPress={handleRefresh} disabled={isRefreshing} style={{ backgroundColor: theme.cardBackground, padding: 8, borderRadius: 20 }}>
-                        {isRefreshing ? (
-                            <ActivityIndicator size="small" color={theme.primary} />
-                        ) : (
-                            <Ionicons name="refresh" size={24} color={theme.primary} />
-                        )}
-                    </TouchableOpacity>
-                </View>
-            </View>
-
-            <ScrollView contentContainerStyle={styles.content}>
-                {loading ? (
-                    <ActivityIndicator size="large" color={theme.primary} style={{ marginTop: 20 }} />
-                ) : (
-                    <>
-                        {accounts.map((acc) => (
-                            <TouchableOpacity
-                                key={acc.account_id}
-                                style={[styles.card, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}
-                                onPress={() => handleAccountPress(acc)}
-                            >
-                                <View style={styles.cardHeader}>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                                        <View style={[styles.iconContainer, { backgroundColor: theme.background }]}>
-                                            <Ionicons
-                                                name={acc.type === 'cash' ? "cash-outline" : "business-outline"}
-                                                size={24}
-                                                color={theme.primary}
-                                            />
-                                        </View>
-                                        <View>
-                                            <Text style={[styles.accountName, { color: theme.text }]}>{acc.name}</Text>
-                                            <Text style={[styles.iban, { color: theme.icon }]}>{acc.iban !== 'N/A' ? acc.iban : 'Manual Account'}</Text>
-                                        </View>
-                                    </View>
-                                    <Text style={[styles.balance, { color: theme.text }]}>
-                                        {new Intl.NumberFormat('de-DE', { style: 'currency', currency: acc.balances.iso_currency_code }).format(acc.balances.current)}
-                                    </Text>
-                                </View>
-                            </TouchableOpacity>
-                        ))}
-
-                        {!hasCashAccount && (
-                            <TouchableOpacity
-                                style={[styles.addButton, { borderColor: theme.border, borderStyle: 'dashed' }]}
-                                onPress={handleAddCashAccount}
-                            >
-                                <Ionicons name="add-circle-outline" size={24} color={theme.primary} />
-                                <Text style={[styles.addButtonText, { color: theme.primary }]}>Add Cash Account</Text>
-                            </TouchableOpacity>
-                        )}
-
-                        <TouchableOpacity
-                            style={[styles.addButton, { backgroundColor: theme.primary, borderColor: theme.primary, marginTop: 20 }]}
-                            onPress={handleRefresh}
-                            disabled={isRefreshing}
-                        >
+        <TabScreenWrapper>
+            <View style={[styles.container, { backgroundColor: theme.background }]}>
+                <View style={[styles.header, { backgroundColor: theme.cardBackground, borderBottomColor: theme.border }]}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: 8 }}>
+                        <Text style={{ color: theme.icon, fontSize: 12 }}>
+                            {isRefreshing ? 'Syncing...' : 'Sync Data'}
+                        </Text>
+                        <TouchableOpacity onPress={handleRefresh} disabled={isRefreshing} style={{ backgroundColor: theme.cardBackground, padding: 8, borderRadius: 20 }}>
                             {isRefreshing ? (
-                                <ActivityIndicator size="small" color="#FFFFFF" />
+                                <ActivityIndicator size="small" color={theme.primary} />
                             ) : (
-                                <Ionicons name="sync" size={24} color="#FFFFFF" />
+                                <Ionicons name="refresh" size={24} color={theme.primary} />
                             )}
-                            <Text style={[styles.addButtonText, { color: '#FFFFFF' }]}>
-                                {isRefreshing ? 'Syncing Data...' : 'Sync All Accounts'}
-                            </Text>
                         </TouchableOpacity>
-                    </>
-                )}
-            </ScrollView>
-        </View>
+                    </View>
+                </View>
+
+                <ScrollView contentContainerStyle={styles.content}>
+                    {loading ? (
+                        <ActivityIndicator size="large" color={theme.primary} style={{ marginTop: 20 }} />
+                    ) : (
+                        <>
+                            {accounts.map((acc) => (
+                                <TouchableOpacity
+                                    key={acc.account_id}
+                                    style={[styles.card, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}
+                                    onPress={() => handleAccountPress(acc)}
+                                >
+                                    <View style={styles.cardHeader}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                                            <View style={[styles.iconContainer, { backgroundColor: theme.background }]}>
+                                                <Ionicons
+                                                    name={acc.type === 'cash' ? "cash-outline" : "business-outline"}
+                                                    size={24}
+                                                    color={theme.primary}
+                                                />
+                                            </View>
+                                            <View>
+                                                <Text style={[styles.accountName, { color: theme.text }]}>{acc.name}</Text>
+                                                <Text style={[styles.iban, { color: theme.icon }]}>{acc.iban !== 'N/A' ? acc.iban : 'Manual Account'}</Text>
+                                            </View>
+                                        </View>
+                                        <Text style={[styles.balance, { color: theme.text }]}>
+                                            {new Intl.NumberFormat('de-DE', { style: 'currency', currency: acc.balances.iso_currency_code }).format(acc.balances.current)}
+                                        </Text>
+                                    </View>
+                                </TouchableOpacity>
+                            ))}
+
+                            {!hasCashAccount && (
+                                <TouchableOpacity
+                                    style={[styles.addButton, { borderColor: theme.border, borderStyle: 'dashed' }]}
+                                    onPress={handleAddCashAccount}
+                                >
+                                    <Ionicons name="add-circle-outline" size={24} color={theme.primary} />
+                                    <Text style={[styles.addButtonText, { color: theme.primary }]}>Add Cash Account</Text>
+                                </TouchableOpacity>
+                            )}
+
+                            <TouchableOpacity
+                                style={[styles.addButton, { backgroundColor: theme.primary, borderColor: theme.primary, marginTop: 20 }]}
+                                onPress={handleRefresh}
+                                disabled={isRefreshing}
+                            >
+                                {isRefreshing ? (
+                                    <ActivityIndicator size="small" color="#FFFFFF" />
+                                ) : (
+                                    <Ionicons name="sync" size={24} color="#FFFFFF" />
+                                )}
+                                <Text style={[styles.addButtonText, { color: '#FFFFFF' }]}>
+                                    {isRefreshing ? 'Syncing Data...' : 'Sync All Accounts'}
+                                </Text>
+                            </TouchableOpacity>
+                        </>
+                    )}
+                </ScrollView>
+            </View>
+        </TabScreenWrapper>
     );
 }
 
