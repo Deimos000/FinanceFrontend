@@ -1,8 +1,8 @@
 import { Card } from '@/components/ui/Card';
 import { Ionicons } from '@expo/vector-icons';
-import { Platform, ScrollView, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { Platform, ScrollView, Switch, Text, TextInput, TouchableOpacity, View, ActivityIndicator } from 'react-native';
 import { useTheme } from '@/context/ThemeContext';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/context/AuthContext';
 import { createSettingsStyles } from '@/app/styles/screens/settings.styles';
@@ -10,6 +10,7 @@ import { useIsDesktop } from '@/hooks/useIsDesktop';
 import { PinModal } from '@/components/ui/PinModal';
 import TabScreenWrapper from '@/components/ui/TabScreenWrapper';
 import FriendsSection from '@/components/FriendsSection';
+import { fetchSettings, updateSettings } from '@/utils/api';
 
 export default function SettingsScreen() {
     const insets = useSafeAreaInsets();
@@ -21,6 +22,71 @@ export default function SettingsScreen() {
     const [biometrics, setBiometrics] = useState(false);
     const isDesktop = useIsDesktop();
     const [isPinModalVisible, setPinModalVisible] = useState(false);
+
+    // API Key State
+    const [geminiApiKey, setGeminiApiKey] = useState('');
+    const [isSavingKey, setIsSavingKey] = useState(false);
+    const [saveSuccess, setSaveSuccess] = useState(false);
+
+    useEffect(() => {
+        loadSettings();
+    }, []);
+
+    const loadSettings = async () => {
+        try {
+            const data = await fetchSettings();
+            if (data.gemini_api_key) {
+                setGeminiApiKey(data.gemini_api_key);
+            }
+        } catch (error) {
+            console.error("Failed to load settings", error);
+        }
+    };
+
+    const handleSaveApiKey = async () => {
+        if (isSavingKey) return;
+        setIsSavingKey(true);
+        setSaveSuccess(false);
+        try {
+            await updateSettings(geminiApiKey);
+            setSaveSuccess(true);
+            setTimeout(() => setSaveSuccess(false), 2000);
+        } catch (error) {
+            console.error("Failed to save API key", error);
+            // Optionally could add some error state here
+        } finally {
+            setIsSavingKey(false);
+        }
+    };
+
+    const renderApiKeyInput = () => (
+        <View style={styles.apiInputContainer}>
+            <Ionicons name="key-outline" size={22} color={theme.text} style={styles.icon} />
+            <TextInput
+                style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.cardBackground }]}
+                placeholder="Enter Gemini API Key..."
+                placeholderTextColor={theme.icon}
+                value={geminiApiKey}
+                onChangeText={setGeminiApiKey}
+                secureTextEntry={true}
+                autoCapitalize="none"
+                autoCorrect={false}
+            />
+            <TouchableOpacity
+                style={[styles.saveButton, { backgroundColor: saveSuccess ? theme.secondary : theme.primary, opacity: isSavingKey ? 0.7 : 1 }]}
+                onPress={handleSaveApiKey}
+                disabled={isSavingKey}
+            >
+                {isSavingKey ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                    <Text style={styles.saveButtonText}>
+                        {saveSuccess ? 'Saved' : 'Save'}
+                    </Text>
+                )}
+            </TouchableOpacity>
+        </View>
+    );
 
     // ─── Desktop Layout ───
     if (isDesktop) {
@@ -68,6 +134,8 @@ export default function SettingsScreen() {
                                 </View>
                                 <Ionicons name="chevron-forward" size={20} color={theme.icon} />
                             </TouchableOpacity>
+                            <View style={[styles.divider, { backgroundColor: theme.border }]} />
+                            {renderApiKeyInput()}
                         </Card>
 
                         {/* Friends */}
@@ -173,6 +241,8 @@ export default function SettingsScreen() {
                             </View>
                             <Ionicons name="chevron-forward" size={20} color={theme.icon} />
                         </TouchableOpacity>
+                        <View style={[styles.divider, { backgroundColor: theme.border }]} />
+                        {renderApiKeyInput()}
                     </Card>
 
                     {/* Friends */}
@@ -234,3 +304,4 @@ export default function SettingsScreen() {
         </TabScreenWrapper>
     );
 }
+

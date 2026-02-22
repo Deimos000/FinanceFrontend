@@ -54,6 +54,33 @@ export const createSettingsStyles = (theme: typeof Colors.light) => StyleSheet.c
         height: StyleSheet.hairlineWidth,
         marginLeft: 50, // Indent divider to align with text
     },
+    apiInputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        gap: 12,
+    },
+    input: {
+        flex: 1,
+        height: 40,
+        borderRadius: 8,
+        paddingHorizontal: 12,
+        fontSize: 16,
+        borderWidth: 1,
+    },
+    saveButton: {
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 8,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    saveButtonText: {
+        color: '#fff',
+        fontWeight: '600',
+        fontSize: 14,
+    },
     versionText: {
         textAlign: 'center',
         marginTop: 40,

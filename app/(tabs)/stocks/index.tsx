@@ -245,7 +245,7 @@ export default function StocksOverview() {
                                         </TouchableOpacity>
                                     </View>
 
-                                    <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={true} nestedScrollEnabled={true}>
+                                    <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} nestedScrollEnabled={true}>
                                         {sandboxes.length === 0 ? (
                                             <View style={{ padding: 40, alignItems: 'center', justifyContent: 'center', flex: 1 }}>
                                                 <Ionicons name="flask-outline" size={48} color={theme.icon} style={{ opacity: 0.5 }} />
@@ -267,9 +267,14 @@ export default function StocksOverview() {
                                                                 <Text style={{ color: isUp ? theme.secondary : theme.danger, fontSize: 16, fontWeight: '700' }}>{isUp ? '+' : ''}{pnlPercent.toFixed(2)}%</Text>
                                                                 <Text style={{ color: isUp ? theme.secondary : theme.danger, fontSize: 12, opacity: 0.8 }}>{isUp ? '+' : ''}{pnl.toFixed(2)}</Text>
                                                             </View>
-                                                            <TouchableOpacity onPress={() => handleShareSandbox(sb)} style={{ padding: 8 }}>
-                                                                <Ionicons name="share-outline" size={20} color={theme.primary} />
-                                                            </TouchableOpacity>
+                                                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                                <TouchableOpacity onPress={() => handleShareSandbox(sb)} style={{ padding: 8 }}>
+                                                                    <Ionicons name="share-outline" size={20} color={theme.primary} />
+                                                                </TouchableOpacity>
+                                                                <TouchableOpacity onPress={() => handleDeleteSandbox(sb)} style={{ padding: 8 }}>
+                                                                    <Ionicons name="trash-outline" size={20} color={theme.danger} />
+                                                                </TouchableOpacity>
+                                                            </View>
                                                         </TouchableOpacity>
                                                     );
                                                 })}
@@ -462,6 +467,9 @@ export default function StocksOverview() {
                                                 <Text style={[styles.sandboxName, { color: theme.text }]} numberOfLines={1}>{sandbox.name}</Text>
                                                 <TouchableOpacity onPress={() => handleShareSandbox(sandbox)} style={{ padding: 4 }}>
                                                     <Ionicons name="share-outline" size={16} color={theme.primary} />
+                                                </TouchableOpacity>
+                                                <TouchableOpacity onPress={() => handleDeleteSandbox(sandbox)} style={{ padding: 4 }}>
+                                                    <Ionicons name="trash-outline" size={16} color={theme.danger} />
                                                 </TouchableOpacity>
                                             </View>
                                             <Text style={[styles.sandboxBalance, { color: theme.text }]}>

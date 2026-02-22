@@ -61,6 +61,16 @@ export async function api<T = any>(
     return res.json();
 }
 
+// ── Settings ─────────────────────────────────────────────
+export const fetchSettings = () =>
+    api<{ gemini_api_key?: string }>('/auth/settings');
+
+export const updateSettings = (gemini_api_key: string) =>
+    api('/auth/settings', {
+        method: 'PUT',
+        body: JSON.stringify({ gemini_api_key }),
+    });
+
 // ── Accounts ─────────────────────────────────────────────
 
 export const fetchAccounts = () =>

@@ -9,6 +9,7 @@ import { useIsDesktop } from '@/hooks/useIsDesktop';
 
 interface SandboxTradeModalProps {
     sandboxId: number;
+    availableCash: number;
     onClose: () => void;
     onSuccess: () => void;
     initialStock?: Partial<Stock> | null;
@@ -17,7 +18,7 @@ interface SandboxTradeModalProps {
 }
 
 
-export const SandboxTradeModal = ({ sandboxId, onClose, onSuccess, initialStock, currentPosition, tradeHistory = [] }: SandboxTradeModalProps) => {
+export const SandboxTradeModal = ({ sandboxId, availableCash, onClose, onSuccess, initialStock, currentPosition, tradeHistory = [] }: SandboxTradeModalProps) => {
     const { colors: theme } = useTheme();
     const isDesktop = useIsDesktop();
     const [step, setStep] = useState<'SEARCH' | 'TRADE'>(initialStock ? 'TRADE' : 'SEARCH');
@@ -98,8 +99,22 @@ export const SandboxTradeModal = ({ sandboxId, onClose, onSuccess, initialStock,
         }
     };
 
-    const maxShares = currentPosition ? currentPosition.quantity : 0;
-    const maxDollars = currentPosition && selectedStock ? currentPosition.quantity * selectedStock.price : 0;
+    const maxSharesSell = currentPosition ? currentPosition.quantity : 0;
+    const maxDollarsSell = currentPosition && selectedStock ? currentPosition.quantity * selectedStock.price : 0;
+
+    const maxDollarsBuy = availableCash;
+    const maxSharesBuy = selectedStock && selectedStock.price > 0 ? availableCash / selectedStock.price : 0;
+
+    const enforceLimits = (num: number) => {
+        if (tradeType === 'SELL') {
+            if (mode === 'SHARES' && num > maxSharesSell) return maxSharesSell;
+            if (mode === 'DOLLARS' && num > maxDollarsSell) return maxDollarsSell;
+        } else if (tradeType === 'BUY') {
+            if (mode === 'SHARES' && num > maxSharesBuy) return maxSharesBuy;
+            if (mode === 'DOLLARS' && num > maxDollarsBuy) return maxDollarsBuy;
+        }
+        return num;
+    };
 
     const handleAmountChange = (text: string) => {
         if (text === '') {
@@ -113,13 +128,14 @@ export const SandboxTradeModal = ({ sandboxId, onClose, onSuccess, initialStock,
             cleaned = parts[0] + '.' + parts.slice(1).join('');
         }
 
-        if (tradeType === 'SELL') {
-            const num = parseFloat(cleaned);
-            if (!isNaN(num)) {
-                if (mode === 'SHARES' && num > maxShares) {
-                    cleaned = maxShares.toString();
-                } else if (mode === 'DOLLARS' && num > maxDollars) {
-                    cleaned = maxDollars.toFixed(2).toString();
+        const num = parseFloat(cleaned);
+        if (!isNaN(num)) {
+            const clamped = enforceLimits(num);
+            if (clamped !== num) {
+                if (mode === 'DOLLARS') {
+                    cleaned = (Math.floor(clamped) === clamped ? clamped.toString() : clamped.toFixed(2).toString());
+                } else {
+                    cleaned = clamped.toString();
                 }
             }
         }
@@ -132,12 +148,15 @@ export const SandboxTradeModal = ({ sandboxId, onClose, onSuccess, initialStock,
         let step = mode === 'DOLLARS' ? 100 : 1;
         let next = current + step;
 
-        if (tradeType === 'SELL') {
-            if (mode === 'SHARES' && next > maxShares) next = maxShares;
-            if (mode === 'DOLLARS' && next > maxDollars) next = maxDollars;
-        }
+        next = enforceLimits(next);
 
-        setAmount(next.toString());
+        if (mode === 'DOLLARS' && Math.floor(next) === next) {
+            setAmount(next.toString());
+        } else if (mode === 'DOLLARS') {
+            setAmount(next.toFixed(2));
+        } else {
+            setAmount(next.toString());
+        }
     };
 
     const handleDecrement = () => {
@@ -145,15 +164,28 @@ export const SandboxTradeModal = ({ sandboxId, onClose, onSuccess, initialStock,
         let step = mode === 'DOLLARS' ? 100 : 1;
         let next = current - step;
         if (next < 0) next = 0;
-        setAmount(next.toString());
+
+        if (mode === 'DOLLARS' && Math.floor(next) === next) {
+            setAmount(next.toString());
+        } else if (mode === 'DOLLARS') {
+            setAmount(next.toFixed(2));
+        } else {
+            setAmount(next.toString());
+        }
     };
 
     const setMaxAmount = () => {
         if (tradeType === 'SELL') {
             if (mode === 'DOLLARS') {
-                setAmount(maxDollars.toFixed(2));
+                setAmount(maxDollarsSell.toFixed(2));
             } else {
-                setAmount(maxShares.toString());
+                setAmount(maxSharesSell.toString());
+            }
+        } else if (tradeType === 'BUY') {
+            if (mode === 'DOLLARS') {
+                setAmount(maxDollarsBuy.toFixed(2));
+            } else {
+                setAmount(maxSharesBuy.toString());
             }
         }
     };
@@ -299,7 +331,7 @@ export const SandboxTradeModal = ({ sandboxId, onClose, onSuccess, initialStock,
                                                 <Ionicons name="remove" size={24} color={theme.text} />
                                             </TouchableOpacity>
 
-                                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flex: 1, paddingHorizontal: 32 }}>
                                                 {mode === 'DOLLARS' && <Text style={{ fontSize: 32, color: theme.text, fontWeight: 'bold', marginRight: 4 }}>$</Text>}
                                                 <TextInput
                                                     style={[
@@ -324,11 +356,15 @@ export const SandboxTradeModal = ({ sandboxId, onClose, onSuccess, initialStock,
                                             </TouchableOpacity>
                                         </View>
 
-                                        {tradeType === 'SELL' && maxShares > 0 && (
+                                        {((tradeType === 'SELL' && maxSharesSell > 0) || (tradeType === 'BUY' && maxDollarsBuy > 0)) && (
                                             <View style={{ alignItems: 'center', marginTop: 10 }}>
                                                 <TouchableOpacity onPress={setMaxAmount} style={{ paddingHorizontal: 12, paddingVertical: 6, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 12, borderWidth: 1, borderColor: theme.border }}>
                                                     <Text style={{ color: theme.secondary, fontSize: 13, fontWeight: '600' }}>
-                                                        Max Available: {mode === 'DOLLARS' ? `$${maxDollars.toFixed(2)}` : `${maxShares.toFixed(4)} sh`}
+                                                        Max Available: {
+                                                            tradeType === 'SELL'
+                                                                ? (mode === 'DOLLARS' ? `$${maxDollarsSell.toFixed(2)}` : `${maxSharesSell.toFixed(4)} sh`)
+                                                                : (mode === 'DOLLARS' ? `$${maxDollarsBuy.toFixed(2)}` : `${maxSharesBuy.toFixed(4)} sh`)
+                                                        }
                                                     </Text>
                                                 </TouchableOpacity>
                                             </View>
