@@ -23,7 +23,7 @@ import { useIsDesktop } from '@/hooks/useIsDesktop';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-type ConnectStep = 'search' | 'authorize' | 'processing';
+type ConnectStep = 'search' | 'authorize' | 'processing' | 'success';
 
 // ─── Country flag helper ─────────────────────────────────────────────────────
 
@@ -36,8 +36,8 @@ const flagFor = (country?: string) => FLAG[country?.toUpperCase() ?? ''] ?? '�
 // ─── Step Indicator ──────────────────────────────────────────────────────────
 
 function StepIndicator({ step, primary }: { step: ConnectStep; primary: string }) {
-    const steps: ConnectStep[] = ['search', 'authorize', 'processing'];
-    const labels = ['Search', 'Authorise', 'Connecting'];
+    const steps: ConnectStep[] = ['search', 'authorize', 'processing', 'success'];
+    const labels = ['Search', 'Authorise', 'Connecting', 'Done'];
     const idx = steps.indexOf(step);
     return (
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
@@ -77,9 +77,10 @@ interface ConnectPanelProps {
     connectBank: (name: string, country?: string) => Promise<void>;
     processCode: (code: string) => Promise<void>;
     onClose?: () => void;
+    onSuccess?: () => void;
 }
 
-function ConnectPanel({ theme, searchBanks, bankResults, bankSearchLoading, connectBank, processCode, onClose }: ConnectPanelProps) {
+function ConnectPanel({ theme, searchBanks, bankResults, bankSearchLoading, connectBank, processCode, onClose, onSuccess }: ConnectPanelProps) {
     const [step, setStep] = useState<ConnectStep>('search');
     const [query, setQuery] = useState('');
     const [country, setCountry] = useState('DE');
@@ -103,7 +104,7 @@ function ConnectPanel({ theme, searchBanks, bankResults, bankSearchLoading, conn
         await connectBank(selectedBank.name, selectedBank.country || country);
     };
 
-    const handleManualSubmit = () => {
+    const handleManualSubmit = async () => {
         const input = manualUrl.trim();
         if (!input) return;
         let code = input;
@@ -118,7 +119,15 @@ function ConnectPanel({ theme, searchBanks, bankResults, bankSearchLoading, conn
             }
         }
         setStep('processing');
-        processCode(code);
+        try {
+            await processCode(code);
+            setStep('success');
+            if (onSuccess) onSuccess();
+        } catch (e) {
+            // processCode handles its own errors via setError usually, but if it throws we might stay in processing
+            // or go back. For now let's stay in processing or go to error state if we had one.
+            setStep('search'); // Reset on failure for now
+        }
     };
 
     const cardBg = theme.cardBackground;
@@ -316,6 +325,28 @@ function ConnectPanel({ theme, searchBanks, bankResults, bankSearchLoading, conn
                     <Text style={{ color: icon, fontSize: 13, textAlign: 'center', lineHeight: 19 }}>
                         Complete the bank login in the browser tab.{'\n'}This screen will update automatically when done.
                     </Text>
+                </View>
+            )}
+
+            {/* ── Step 4: Success ── */}
+            {step === 'success' && (
+                <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+                    <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: '#4CAF50', alignItems: 'center', justifyContent: 'center' }}>
+                        <Ionicons name="checkmark" size={40} color="#fff" />
+                    </View>
+                    <Text style={{ color: text, fontWeight: '700', fontSize: 20 }}>Account Connected!</Text>
+                    <Text style={{ color: icon, fontSize: 14, textAlign: 'center', lineHeight: 20 }}>
+                        Your transactions are now syncing.{'\n'}This may take a moment.
+                    </Text>
+                    <TouchableOpacity
+                        onPress={onClose}
+                        style={{
+                            marginTop: 20,
+                            backgroundColor: theme.primary, paddingHorizontal: 32, paddingVertical: 14,
+                            borderRadius: 12,
+                        }}>
+                        <Text style={{ color: '#fff', fontWeight: '700' }}>Done</Text>
+                    </TouchableOpacity>
                 </View>
             )}
         </View>

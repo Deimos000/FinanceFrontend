@@ -9,6 +9,7 @@
  */
 
 import { Platform } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
 
 // ── Configure your backend URL here ─────────────────────
 // On Android emulator localhost maps differently, use 10.0.2.2
@@ -29,12 +30,27 @@ async function api<T = any>(
     options: RequestInit = {},
 ): Promise<T> {
     const url = `${BACKEND_URL}${path}`;
+
+    // Get token from secure store
+    let token = null;
+    try {
+        token = await SecureStore.getItemAsync('userToken');
+    } catch (e) {
+        console.warn("Failed to get token", e);
+    }
+
+    const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        ...(options.headers as Record<string, string> || {}),
+    };
+
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const res = await fetch(url, {
         ...options,
-        headers: {
-            'Content-Type': 'application/json',
-            ...(options.headers || {}),
-        },
+        headers,
     });
 
     if (!res.ok) {

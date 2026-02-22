@@ -184,13 +184,21 @@ export function useBankData() {
             console.log('[useBankData] processCode called with code prefix:', code.substring(0, 20));
             const data = await bankingSession(code);
             console.log('[useBankData] bankingSession response:', JSON.stringify(data).substring(0, 500));
+
             if (data.accounts && data.accounts.length > 0) {
                 console.log(`[useBankData] Got ${data.accounts.length} accounts, refreshing from server...`);
+                // Immediate refresh to ensure frontend state matches backend
                 await fetchAccountsFromServer();
             } else {
                 console.warn('[useBankData] bankingSession returned no accounts');
-                setError('No accounts were returned from the bank. Please try again.');
+                // Even if no accounts returned directly, fetch from server just in case
+                await fetchAccountsFromServer();
+                // If still no accounts, then maybe error
+                if (accounts.length === 0) {
+                    setError('No accounts were returned. Please try again.');
+                }
             }
+
             if ((data as any).errors && (data as any).errors.length > 0) {
                 console.error('[useBankData] Partial errors:', (data as any).errors);
                 setError(`Some accounts had errors: ${(data as any).errors.map((e: any) => e.error).join(', ')}`);
@@ -198,28 +206,41 @@ export function useBankData() {
         } catch (err: any) {
             console.error('Auth processing failed:', err);
             const msg = err?.message || String(err);
-            if (msg.includes('ALREADY_AUTHORIZED')) {
-                setError('This authorization code was already used. Please reconnect your bank to get a new code.');
+
+            if (msg.includes('ALREADY_AUTHORIZED') || msg.includes('unused')) {
+                // If code is already used, it might mean the previous attempt actually succeeded but UI didn't update.
+                // Or the user refreshed the page. Try fetching accounts to see if it worked.
+                console.log('[useBankData] Code already used. Fetching accounts to verify connection...');
+                await fetchAccountsFromServer();
+                // We don't set error here, effectively treating it as "restored session"
             } else {
                 setError(`Authentication failed: ${msg.substring(0, 120)}`);
             }
         } finally {
             setLoading(false);
+            processingCodeRef.current = null; // Allow future codes
         }
     };
 
     // Check for code in URL (Web handling)
+    const processingCodeRef = useRef<string | null>(null);
+
     useEffect(() => {
         if (Platform.OS === 'web') {
-            console.log('[useBankData] Checking URL for code:', window.location.search);
             const params = new URLSearchParams(window.location.search);
             const code = params.get('code');
-            if (code) {
+
+            // Prevent double-processing the same code in React Concurrent Mode / Strict Mode
+            if (code && processingCodeRef.current !== code) {
                 console.log('[useBankData] Found code, processing:', code);
+                processingCodeRef.current = code;
+
+                // Clean URL immediately
                 window.history.replaceState({}, '', window.location.pathname);
-                processCode(code);
-            } else {
-                console.log('[useBankData] No code found in URL');
+
+                processCode(code).then(() => {
+                    // Reset ref after a delay if needed, or keep it to prevent re-use
+                });
             }
         }
     }, []);

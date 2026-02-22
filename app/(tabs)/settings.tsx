@@ -4,12 +4,14 @@ import { Platform, ScrollView, Switch, Text, TouchableOpacity, View } from 'reac
 import { useTheme } from '@/context/ThemeContext';
 import { useMemo, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAuth } from '@/context/AuthContext';
 import { createSettingsStyles } from '@/app/styles/screens/settings.styles';
 import { useIsDesktop } from '@/hooks/useIsDesktop';
 
 export default function SettingsScreen() {
     const insets = useSafeAreaInsets();
     const { colors: theme, toggleTheme, theme: currentTheme } = useTheme();
+    const { logout } = useAuth();
     const styles = useMemo(() => createSettingsStyles(theme), [theme]);
 
     const [notifications, setNotifications] = useState(true);
@@ -80,6 +82,17 @@ export default function SettingsScreen() {
                                 <Text style={[styles.settingLabel, { color: theme.text }]}>Change PIN</Text>
                             </View>
                             <Ionicons name="chevron-forward" size={20} color={theme.icon} />
+                        </TouchableOpacity>
+                    </Card>
+
+                    {/* Session */}
+                    <Text style={[styles.sectionTitle, { color: theme.icon, marginTop: 24 }]}>Session</Text>
+                    <Card style={[styles.card, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}>
+                        <TouchableOpacity style={styles.settingRow} onPress={logout}>
+                            <View style={styles.settingLabelContainer}>
+                                <Ionicons name="log-out-outline" size={22} color="#e74c3c" style={styles.icon} />
+                                <Text style={[styles.settingLabel, { color: '#e74c3c' }]}>Sign Out</Text>
+                            </View>
                         </TouchableOpacity>
                     </Card>
 
@@ -169,6 +182,17 @@ export default function SettingsScreen() {
                             <Text style={[styles.settingLabel, { color: theme.text }]}>Change PIN</Text>
                         </View>
                         <Ionicons name="chevron-forward" size={20} color={theme.icon} />
+                    </TouchableOpacity>
+                </Card>
+
+                {/* Session */}
+                <Text style={[styles.sectionTitle, { color: theme.icon, marginTop: 24 }]}>Session</Text>
+                <Card style={[styles.card, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}>
+                    <TouchableOpacity style={styles.settingRow} onPress={logout}>
+                        <View style={styles.settingLabelContainer}>
+                            <Ionicons name="log-out-outline" size={22} color="#e74c3c" style={styles.icon} />
+                            <Text style={[styles.settingLabel, { color: '#e74c3c' }]}>Sign Out</Text>
+                        </View>
                     </TouchableOpacity>
                 </Card>
 
