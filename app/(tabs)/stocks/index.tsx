@@ -152,7 +152,11 @@ export default function StocksOverview() {
                         <View style={[styles.searchContainer, { width: '100%', maxWidth: 600, height: 56, borderRadius: 16, backgroundColor: theme.cardBackground, borderWidth: 0, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 3 }]}>
                             <Ionicons name="search" size={24} color={theme.icon} style={{ marginRight: 12, marginLeft: 8 }} />
                             <TextInput
-                                style={[styles.input, { color: theme.text, fontSize: 18 }]}
+                                style={[
+                                    styles.input,
+                                    { color: theme.text, fontSize: 18 },
+                                    Platform.select({ web: { outlineStyle: 'none' } as any })
+                                ]}
                                 placeholder="Search stocks, ETFs, and more..."
                                 placeholderTextColor={theme.icon}
                                 value={query}
@@ -405,7 +409,11 @@ export default function StocksOverview() {
             <View style={[styles.searchContainer, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}>
                 <Ionicons name="search" size={20} color={theme.icon} />
                 <TextInput
-                    style={[styles.input, { color: theme.text }]}
+                    style={[
+                        styles.input,
+                        { color: theme.text },
+                        Platform.select({ web: { outlineStyle: 'none' } as any })
+                    ]}
                     placeholder="Search for symbol or company..."
                     placeholderTextColor={theme.icon}
                     value={query}

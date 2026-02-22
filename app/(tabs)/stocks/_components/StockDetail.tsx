@@ -17,7 +17,7 @@ export default function StockDetail({ visible, stock, onClose }: StockDetailProp
 
     return (
         <Modal animationType="slide" presentationStyle="pageSheet" visible={visible} onRequestClose={onClose}>
-            <View style={[styles.container, { backgroundColor: colors.background }]}>
+            <View style={[styles.container, { backgroundColor: '#000000' }]}>
                 <View style={styles.header}>
                     <TouchableOpacity onPress={onClose} style={styles.closeButton}>
                         <Ionicons name="close" size={28} color={colors.text} />

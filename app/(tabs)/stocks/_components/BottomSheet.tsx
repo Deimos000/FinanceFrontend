@@ -27,7 +27,7 @@ export default function BottomSheet({ visible, onClose, height = 400, children }
                 <View style={{ flex: 1 }} />
             </TouchableOpacity>
 
-            <View style={[styles.sheet, { height, backgroundColor: colors.background, borderTopColor: colors.border }]}>
+            <View style={[styles.sheet, { height, backgroundColor: colors.cardBackground, borderTopColor: colors.border }]}>
                 <View style={styles.handleContainer}>
                     <View style={[styles.handle, { backgroundColor: colors.border }]} />
                 </View>

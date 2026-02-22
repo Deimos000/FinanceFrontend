@@ -10,6 +10,7 @@ import { InteractiveChart } from '../_components/InteractiveChart';
 import { useFocusEffect } from '@react-navigation/native';
 import SandboxTradeModal from '../_components/SandboxTradeModal';
 import { Ionicons } from '@expo/vector-icons';
+import { useIsDesktop } from '@/hooks/useIsDesktop';
 
 export default function SandboxDetail() {
     const { id } = useLocalSearchParams();
@@ -17,6 +18,7 @@ export default function SandboxDetail() {
     const { colors } = useTheme();
     const router = useRouter();
     const insets = useSafeAreaInsets();
+    const isDesktop = useIsDesktop();
 
     const [portfolio, setPortfolio] = useState<SandboxPortfolio | null>(null);
     const [transactions, setTransactions] = useState<SandboxTransaction[]>([]);
@@ -281,7 +283,8 @@ export default function SandboxDetail() {
             <Modal
                 visible={tradeModalVisible}
                 animationType="slide"
-                presentationStyle="pageSheet"
+                presentationStyle={isDesktop ? "overFullScreen" : "pageSheet"}
+                transparent={isDesktop}
                 onRequestClose={() => setTradeModalVisible(false)}
             >
                 <SandboxTradeModal

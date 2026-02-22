@@ -142,15 +142,19 @@ export default function FriendsSection({ theme, styles }: FriendsSectionProps) {
                             placeholderTextColor={theme.secondary || theme.icon}
                             value={searchQuery}
                             onChangeText={handleSearch}
-                            style={{
-                                color: theme.text,
-                                fontSize: 16,
-                                padding: 8,
-                                backgroundColor: 'rgba(255,255,255,0.06)',
-                                borderRadius: 12,
-                                borderWidth: 1,
-                                borderColor: theme.border,
-                            }}
+                            style={[
+                                styles.searchInput,
+                                {
+                                    color: theme.text,
+                                    fontSize: 16,
+                                    padding: 8,
+                                    backgroundColor: 'rgba(255,255,255,0.06)',
+                                    borderRadius: 12,
+                                    borderWidth: 1,
+                                    borderColor: theme.border,
+                                },
+                                Platform.select({ web: { outlineStyle: 'none' } as any })
+                            ]}
                         />
                     </View>
                 </View>
