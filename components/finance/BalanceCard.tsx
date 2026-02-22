@@ -1,6 +1,7 @@
 import { Colors } from '@/constants/Colors';
-import { StyleSheet, Text, useColorScheme, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { Card } from '../ui/Card';
+import { useTheme } from '@/context/ThemeContext';
 
 interface BalanceCardProps {
     balance: number;
@@ -9,8 +10,7 @@ interface BalanceCardProps {
 }
 
 export function BalanceCard({ balance, currency = '$', percentageChange }: BalanceCardProps) {
-    const colorScheme = useColorScheme();
-    const theme = Colors[colorScheme ?? 'light'];
+    const { colors: theme } = useTheme();
 
     const isPositive = (percentageChange || 0) >= 0;
 

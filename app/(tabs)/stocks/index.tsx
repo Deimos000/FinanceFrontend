@@ -254,7 +254,7 @@ export default function StocksOverview() {
                                                     const isUp = pnl >= 0;
                                                     return (
                                                         <TouchableOpacity key={sb.id} onPress={() => router.push(`/stocks/sandbox/${sb.id}`)} onLongPress={() => handleDeleteSandbox(sb)}
-                                                            style={{ backgroundColor: theme.background, borderRadius: 12, padding: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                            style={{ backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                                                             <View style={{ flex: 1 }}>
                                                                 <Text style={{ color: theme.text, fontWeight: '700', fontSize: 16 }}>{sb.name}</Text>
                                                                 <Text style={{ color: theme.icon, fontSize: 13, marginTop: 4 }}>Equity: ${(sb.total_equity ?? sb.balance).toLocaleString()}</Text>
@@ -271,45 +271,42 @@ export default function StocksOverview() {
                                                 })}
                                             </View>
                                         )}
+
+                                        {/* Shared With Me - inside same card */}
+                                        {sharedSandboxes.length > 0 && (
+                                            <View style={{ marginTop: 8 }}>
+                                                <View style={{ height: 1, backgroundColor: theme.border, marginBottom: 16, opacity: 0.5 }} />
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                                                    <Ionicons name="people" size={16} color="#FFA500" />
+                                                    <Text style={{ fontSize: 14, fontWeight: '600', color: theme.icon }}>Shared With Me</Text>
+                                                </View>
+                                                <View style={{ gap: 12, paddingBottom: 20 }}>
+                                                    {sharedSandboxes.map((sb) => {
+                                                        const { pnl, pnlPercent } = getSandboxPnL(sb);
+                                                        const isUp = pnl >= 0;
+                                                        return (
+                                                            <TouchableOpacity key={`shared-${sb.id}`} onPress={() => router.push(`/stocks/sandbox/${sb.id}`)}
+                                                                style={{ backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                                <View style={{ flex: 1 }}>
+                                                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                                                        <Text style={{ color: theme.text, fontWeight: '700', fontSize: 16 }}>{sb.name}</Text>
+                                                                        <View style={{ backgroundColor: sb.permission === 'edit' ? '#4cd96420' : theme.primary + '20', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
+                                                                            <Text style={{ color: sb.permission === 'edit' ? '#4cd964' : theme.primary, fontSize: 10, fontWeight: '600', textTransform: 'uppercase' }}>{sb.permission}</Text>
+                                                                        </View>
+                                                                    </View>
+                                                                    <Text style={{ color: theme.icon, fontSize: 12, marginTop: 4 }}>by {sb.owner_username}</Text>
+                                                                </View>
+                                                                <View style={{ alignItems: 'flex-end' }}>
+                                                                    <Text style={{ color: isUp ? theme.secondary : theme.danger, fontSize: 16, fontWeight: '700' }}>{isUp ? '+' : ''}{pnlPercent.toFixed(2)}%</Text>
+                                                                </View>
+                                                            </TouchableOpacity>
+                                                        );
+                                                    })}
+                                                </View>
+                                            </View>
+                                        )}
                                     </ScrollView>
                                 </View>
-
-                                {/* Shared Sandboxes Card */}
-                                {sharedSandboxes.length > 0 && (
-                                    <View style={{ flex: 1, backgroundColor: '#1A0B2E', borderRadius: 20, padding: 24, maxHeight: 400, marginTop: 16 }}>
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-                                            <View style={{ padding: 8, borderRadius: 8, backgroundColor: '#FFA50020' }}>
-                                                <Ionicons name="people" size={20} color="#FFA500" />
-                                            </View>
-                                            <Text style={{ fontSize: 22, fontWeight: '700', color: theme.text }}>Shared With Me</Text>
-                                        </View>
-                                        <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={true} nestedScrollEnabled={true}>
-                                            <View style={{ gap: 12 }}>
-                                                {sharedSandboxes.map((sb) => {
-                                                    const { pnl, pnlPercent } = getSandboxPnL(sb);
-                                                    const isUp = pnl >= 0;
-                                                    return (
-                                                        <TouchableOpacity key={`shared-${sb.id}`} onPress={() => router.push(`/stocks/sandbox/${sb.id}`)}
-                                                            style={{ backgroundColor: theme.background, borderRadius: 12, padding: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                            <View style={{ flex: 1 }}>
-                                                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                                                                    <Text style={{ color: theme.text, fontWeight: '700', fontSize: 16 }}>{sb.name}</Text>
-                                                                    <View style={{ backgroundColor: sb.permission === 'edit' ? '#4cd96420' : theme.primary + '20', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
-                                                                        <Text style={{ color: sb.permission === 'edit' ? '#4cd964' : theme.primary, fontSize: 10, fontWeight: '600', textTransform: 'uppercase' }}>{sb.permission}</Text>
-                                                                    </View>
-                                                                </View>
-                                                                <Text style={{ color: theme.icon, fontSize: 12, marginTop: 4 }}>by {sb.owner_username}</Text>
-                                                            </View>
-                                                            <View style={{ alignItems: 'flex-end' }}>
-                                                                <Text style={{ color: isUp ? theme.secondary : theme.danger, fontSize: 16, fontWeight: '700' }}>{isUp ? '+' : ''}{pnlPercent.toFixed(2)}%</Text>
-                                                            </View>
-                                                        </TouchableOpacity>
-                                                    );
-                                                })}
-                                            </View>
-                                        </ScrollView>
-                                    </View>
-                                )}
 
                                 {/* Watchlist Card */}
                                 <View style={{ flex: 1, backgroundColor: '#1A0B2E', borderRadius: 20, padding: 24, height: 500 }}>
@@ -473,52 +470,54 @@ export default function StocksOverview() {
                                 })}
                             </ScrollView>
                         )}
+
+                        {/* Shared With Me - inside same section */}
+                        {sharedSandboxes.length > 0 && (
+                            <View style={{ marginTop: 16 }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10, gap: 6 }}>
+                                    <Ionicons name="people" size={16} color="#FFA500" />
+                                    <Text style={{ fontSize: 14, fontWeight: '600', color: theme.icon }}>Shared With Me</Text>
+                                </View>
+                                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                                    {sharedSandboxes.map(sandbox => {
+                                        const { pnl, pnlPercent } = getSandboxPnL(sandbox);
+                                        const isPnlPositive = pnl >= 0;
+                                        return (
+                                            <TouchableOpacity
+                                                key={`shared-${sandbox.id}`}
+                                                style={[styles.sandboxCard, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}
+                                                onPress={() => router.push({ pathname: `/stocks/sandbox/[id]`, params: { id: sandbox.id, name: sandbox.name } })}
+                                            >
+                                                <View style={styles.sandboxCardHeader}>
+                                                    <View style={[styles.sandboxIconBadge, { backgroundColor: '#FFA50020' }]}>
+                                                        <Ionicons name="people" size={14} color="#FFA500" />
+                                                    </View>
+                                                    <Text style={[styles.sandboxName, { color: theme.text }]} numberOfLines={1}>{sandbox.name}</Text>
+                                                </View>
+                                                <Text style={{ color: theme.icon, fontSize: 11, marginBottom: 4 }}>by {sandbox.owner_username}</Text>
+                                                <Text style={[styles.sandboxBalance, { color: theme.text, fontSize: 18 }]}>
+                                                    {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(sandbox.total_equity ?? sandbox.balance)}
+                                                </Text>
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                                    <View style={[styles.pnlBadge, { backgroundColor: isPnlPositive ? theme.secondary + '18' : theme.danger + '18' }]}>
+                                                        <Text style={{ color: isPnlPositive ? theme.secondary : theme.danger, fontSize: 11, fontWeight: '600' }}>
+                                                            {isPnlPositive ? '+' : ''}{pnlPercent.toFixed(1)}%
+                                                        </Text>
+                                                    </View>
+                                                    <View style={{ backgroundColor: sandbox.permission === 'edit' ? '#4cd96420' : theme.primary + '20', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
+                                                        <Text style={{ color: sandbox.permission === 'edit' ? '#4cd964' : theme.primary, fontSize: 10, fontWeight: '600', textTransform: 'uppercase' }}>{sandbox.permission}</Text>
+                                                    </View>
+                                                </View>
+                                            </TouchableOpacity>
+                                        );
+                                    })}
+                                </ScrollView>
+                            </View>
+                        )}
                     </View>
                 )}
 
-                {/* Shared Sandboxes Section - Mobile */}
-                {!query && sharedSandboxes.length > 0 && (
-                    <View style={styles.section}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12, gap: 8 }}>
-                            <Ionicons name="people" size={18} color="#FFA500" />
-                            <Text style={[styles.sectionTitle, { color: theme.text, marginBottom: 0 }]}>Shared With Me</Text>
-                        </View>
-                        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                            {sharedSandboxes.map(sandbox => {
-                                const { pnl, pnlPercent } = getSandboxPnL(sandbox);
-                                const isPnlPositive = pnl >= 0;
-                                return (
-                                    <TouchableOpacity
-                                        key={`shared-${sandbox.id}`}
-                                        style={[styles.sandboxCard, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}
-                                        onPress={() => router.push({ pathname: `/stocks/sandbox/[id]`, params: { id: sandbox.id, name: sandbox.name } })}
-                                    >
-                                        <View style={styles.sandboxCardHeader}>
-                                            <View style={[styles.sandboxIconBadge, { backgroundColor: '#FFA50020' }]}>
-                                                <Ionicons name="people" size={14} color="#FFA500" />
-                                            </View>
-                                            <Text style={[styles.sandboxName, { color: theme.text }]} numberOfLines={1}>{sandbox.name}</Text>
-                                        </View>
-                                        <Text style={{ color: theme.icon, fontSize: 11, marginBottom: 4 }}>by {sandbox.owner_username}</Text>
-                                        <Text style={[styles.sandboxBalance, { color: theme.text, fontSize: 18 }]}>
-                                            {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(sandbox.total_equity ?? sandbox.balance)}
-                                        </Text>
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                                            <View style={[styles.pnlBadge, { backgroundColor: isPnlPositive ? theme.secondary + '18' : theme.danger + '18' }]}>
-                                                <Text style={{ color: isPnlPositive ? theme.secondary : theme.danger, fontSize: 11, fontWeight: '600' }}>
-                                                    {isPnlPositive ? '+' : ''}{pnlPercent.toFixed(1)}%
-                                                </Text>
-                                            </View>
-                                            <View style={{ backgroundColor: sandbox.permission === 'edit' ? '#4cd96420' : theme.primary + '20', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
-                                                <Text style={{ color: sandbox.permission === 'edit' ? '#4cd964' : theme.primary, fontSize: 10, fontWeight: '600', textTransform: 'uppercase' }}>{sandbox.permission}</Text>
-                                            </View>
-                                        </View>
-                                    </TouchableOpacity>
-                                );
-                            })}
-                        </ScrollView>
-                    </View>
-                )}
+
 
                 {/* Watchlist Section */}
                 {watchlistData.length > 0 && !query && (

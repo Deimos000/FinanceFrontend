@@ -1,7 +1,8 @@
 import { Colors } from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet, Text, useColorScheme, View, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { useMemo } from 'react';
+import { useTheme } from '@/context/ThemeContext';
 import { createTransactionRowStyles } from '@/app/styles/components/TransactionRow.styles';
 
 interface TransactionRowProps {
@@ -20,8 +21,7 @@ interface TransactionRowProps {
 // Transaction Element
 
 export function TransactionRow({ title, subtitle, amount, date, icon, categoryColor, currency = '$', lastItem, onPress }: TransactionRowProps) {
-    const colorScheme = useColorScheme();
-    const theme = Colors[colorScheme ?? 'light'];
+    const { colors: theme } = useTheme();
     const styles = useMemo(() => createTransactionRowStyles(theme), [theme]);
 
     const isExpense = amount < 0;

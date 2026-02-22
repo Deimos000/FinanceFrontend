@@ -2,7 +2,8 @@ import { Colors } from '@/constants/Colors';
 import { addCashTransaction } from '@/utils/api';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState, useMemo } from 'react';
-import { Keyboard, Modal, Pressable, Text, TextInput, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { Keyboard, Modal, Pressable, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useTheme } from '@/context/ThemeContext';
 import { createCashTransactionModalStyles } from '@/app/styles/components/CashTransactionModal.styles';
 
 interface CashTransactionModalProps {
@@ -12,8 +13,7 @@ interface CashTransactionModalProps {
 }
 
 export function CashTransactionModal({ visible, onClose, onSave }: CashTransactionModalProps) {
-    const colorScheme = useColorScheme();
-    const theme = Colors[colorScheme ?? 'light'];
+    const { colors: theme } = useTheme();
     const styles = useMemo(() => createCashTransactionModalStyles(theme), [theme]);
 
     const [amount, setAmount] = useState('');

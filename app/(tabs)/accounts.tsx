@@ -384,7 +384,7 @@ export default function AccountsScreen() {
     }, [removeAccount]);
 
     const handleAccountPress = (account: BankAccount) => {
-        if (account.id === 'CASH_ACCOUNT') {
+        if (account.id.startsWith('CASH_')) {
             router.push('/cash-account');
         } else {
             router.push(`/account/${account.id}`);

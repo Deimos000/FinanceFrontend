@@ -1,7 +1,8 @@
 import { Colors } from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useMemo } from 'react';
-import { Modal, Text, TouchableOpacity, useColorScheme, View, ScrollView } from 'react-native';
+import { Modal, Text, TouchableOpacity, View, ScrollView } from 'react-native';
+import { useTheme } from '@/context/ThemeContext';
 import { createTransactionDetailModalStyles } from '@/app/styles/components/TransactionDetailModal.styles';
 
 interface TransactionDetailModalProps {
@@ -19,8 +20,7 @@ interface TransactionDetailModalProps {
 }
 
 export function TransactionDetailModal({ visible, onClose, transaction }: TransactionDetailModalProps) {
-    const colorScheme = useColorScheme();
-    const theme = Colors[colorScheme ?? 'light'];
+    const { colors: theme } = useTheme();
     const styles = useMemo(() => createTransactionDetailModalStyles(theme), [theme]);
 
     if (!transaction) return null;

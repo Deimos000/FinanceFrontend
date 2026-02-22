@@ -65,7 +65,7 @@ export default function HomeScreen() {
   const netWorth = bankTotal;
 
   // Get Cash Account specifics
-  const cashAccount = accounts.find(a => a.id === 'CASH_ACCOUNT');
+  const cashAccount = accounts.find(a => a.id.startsWith('CASH_'));
   const cashBalance = cashAccount?.balance || 0;
 
   // Recent Activity (Merge Bank + Cash, Sort by Date)

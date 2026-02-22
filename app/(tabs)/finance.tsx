@@ -1,15 +1,15 @@
 import { Colors } from '@/constants/Colors';
 import { Account } from '@/utils/bankingMapper';
-import { fetchAccounts, createCashAccount as apiCreateCash, bankingRefresh, fetchCashAccount } from '@/utils/api';
+import { fetchAccounts, bankingRefresh } from '@/utils/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import TabScreenWrapper from '@/components/ui/TabScreenWrapper';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function FinanceScreen() {
-    const colorScheme = useColorScheme();
-    const theme = Colors[colorScheme ?? 'light'];
+    const { colors: theme } = useTheme();
     const router = useRouter();
     const [accounts, setAccounts] = useState<Account[]>([]);
     const [loading, setLoading] = useState(true);
@@ -29,18 +29,6 @@ export default function FinanceScreen() {
                 type: acc.type || 'depository',
             }));
 
-            // Try adding cash account
-            try {
-                const cash = await fetchCashAccount();
-                if (cash && !accs.find((a: any) => a.account_id === 'CASH_ACCOUNT')) {
-                    accs.push({
-                        ...cash,
-                        account_id: cash.account_id,
-                        balances: { current: cash.balance, iso_currency_code: cash.currency || 'EUR' },
-                        type: 'cash',
-                    });
-                }
-            } catch { }
 
             setAccounts(accs);
         } catch (e) {
@@ -55,10 +43,7 @@ export default function FinanceScreen() {
         }, [])
     );
 
-    const handleAddCashAccount = async () => {
-        await apiCreateCash();
-        loadAccounts();
-    };
+
 
     const handleRefresh = async () => {
         setIsRefreshing(true);
@@ -86,14 +71,14 @@ export default function FinanceScreen() {
     };
 
     const handleAccountPress = (account: Account) => {
-        if (account.account_id === 'CASH_ACCOUNT') {
+        if (account.account_id?.startsWith('CASH_')) {
             router.push('/cash-account');
         } else {
             // Future: Navigate to generic account details
         }
     };
 
-    const hasCashAccount = accounts.some(a => a.account_id === 'CASH_ACCOUNT');
+
 
     return (
         <TabScreenWrapper>
@@ -145,15 +130,7 @@ export default function FinanceScreen() {
                                 </TouchableOpacity>
                             ))}
 
-                            {!hasCashAccount && (
-                                <TouchableOpacity
-                                    style={[styles.addButton, { borderColor: theme.border, borderStyle: 'dashed' }]}
-                                    onPress={handleAddCashAccount}
-                                >
-                                    <Ionicons name="add-circle-outline" size={24} color={theme.primary} />
-                                    <Text style={[styles.addButtonText, { color: theme.primary }]}>Add Cash Account</Text>
-                                </TouchableOpacity>
-                            )}
+
 
                             <TouchableOpacity
                                 style={[styles.addButton, { backgroundColor: theme.primary, borderColor: theme.primary, marginTop: 20 }]}

@@ -146,8 +146,8 @@ export default function FriendsSection({ theme, styles }: FriendsSectionProps) {
                                 color: theme.text,
                                 fontSize: 16,
                                 padding: 8,
-                                backgroundColor: theme.background,
-                                borderRadius: 10,
+                                backgroundColor: 'rgba(255,255,255,0.06)',
+                                borderRadius: 12,
                                 borderWidth: 1,
                                 borderColor: theme.border,
                             }}

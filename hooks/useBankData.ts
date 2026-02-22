@@ -3,7 +3,6 @@ import { Platform } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import {
     fetchAccounts as apiFetchAccounts,
-    fetchCashAccount,
     bankingAuthUrl,
     bankingSession,
     bankingRefresh,
@@ -72,34 +71,7 @@ export function useBankData() {
                 })),
             }));
 
-            try {
-                const cashAcc = await fetchCashAccount();
-                if (cashAcc) {
-                    const cashMapped: BankAccount = {
-                        id: cashAcc.account_id,
-                        name: cashAcc.name || 'Cash Account',
-                        iban: cashAcc.iban || 'N/A',
-                        balance: cashAcc.balance,
-                        currency: cashAcc.currency || 'EUR',
-                        bankName: 'Other',
-                        transactions: (cashAcc.transactions || []).map((t: any) => ({
-                            id: t.id,
-                            date: t.booking_date,
-                            amount: t.amount,
-                            currency: t.currency || 'EUR',
-                            description: t.description || '',
-                            recipient: t.name || 'Cash',
-                            booking_text: t.booking_text,
-                        })),
-                    };
 
-                    if (!fetchedAccounts.find(a => a.id === 'CASH_ACCOUNT')) {
-                        fetchedAccounts.push(cashMapped);
-                    }
-                }
-            } catch {
-                // Cash account may not exist yet
-            }
 
             const totalTransactions = fetchedAccounts.reduce((sum, acc) => sum + acc.transactions.length, 0);
             console.log(`[useBankData] Fetched ${fetchedAccounts.length} accounts with ${totalTransactions} total transactions.`);

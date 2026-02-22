@@ -251,8 +251,8 @@ export const SandboxTradeModal = ({ sandboxId, onClose, onSuccess, initialStock,
                                             <Text style={{ color: theme.secondary, fontSize: 12 }}>{new Date(tx.created_at).toLocaleDateString()}</Text>
                                         </View>
                                         <View style={{ alignItems: 'flex-end' }}>
-                                            <Text style={{ color: theme.text }}>{tx.quantity.toFixed(4)} sh @ ${tx.price.toFixed(2)}</Text>
-                                            <Text style={{ color: theme.secondary }}>Total: ${(tx.quantity * tx.price).toFixed(2)}</Text>
+                                            <Text style={{ color: theme.text }}>{Number(tx.quantity).toFixed(4)} sh @ ${Number(tx.price).toFixed(2)}</Text>
+                                            <Text style={{ color: theme.secondary }}>Total: ${(Number(tx.quantity) * Number(tx.price)).toFixed(2)}</Text>
                                         </View>
                                     </View>
                                 ))}

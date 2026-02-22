@@ -2,7 +2,8 @@ import { Colors } from '@/constants/Colors';
 import { updateCashBalance } from '@/utils/api';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState, useMemo } from 'react';
-import { Keyboard, Modal, Pressable, Text, TextInput, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { Keyboard, Modal, Pressable, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useTheme } from '@/context/ThemeContext';
 import { createEditBalanceModalStyles } from '@/app/styles/components/EditBalanceModal.styles';
 
 interface EditBalanceModalProps {
@@ -13,8 +14,7 @@ interface EditBalanceModalProps {
 }
 
 export function EditBalanceModal({ visible, onClose, onSave, currentBalance }: EditBalanceModalProps) {
-    const colorScheme = useColorScheme();
-    const theme = Colors[colorScheme ?? 'light'];
+    const { colors: theme } = useTheme();
     const styles = useMemo(() => createEditBalanceModalStyles(theme), [theme]);
 
     const [balance, setBalance] = useState('');
