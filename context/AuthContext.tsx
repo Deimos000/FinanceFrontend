@@ -68,7 +68,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     setUsername(storedUsername);
 
                     // Pre-load sandboxes in the background right after login finishes
-                    useSandboxStore.getState().loadSandboxes();
+                    useSandboxStore.getState().loadSandboxes().then(() => {
+                        const store = useSandboxStore.getState();
+                        // Pre-fetch chart data for all sandboxes
+                        store.sandboxes.forEach(sb => {
+                            store.loadPortfolio(sb.id);
+                        });
+                        store.sharedSandboxes.forEach(sb => {
+                            store.loadPortfolio(sb.id);
+                        });
+                    });
                 }
             } catch (e) {
                 console.error("Failed to load auth state", e);
