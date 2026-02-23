@@ -50,12 +50,12 @@ export const createDebtsStyles = (theme: typeof Colors.light) => StyleSheet.crea
         borderWidth: 1,
     },
     oweCard: {
-        backgroundColor: 'rgba(255, 69, 58, 0.1)', // theme.danger with opacity
-        borderColor: 'rgba(255, 69, 58, 0.2)',
+        backgroundColor: theme.danger + '15',
+        borderColor: theme.danger + '30',
     },
     owedCard: {
-        backgroundColor: 'rgba(50, 215, 75, 0.1)', // theme.secondary with opacity
-        borderColor: 'rgba(50, 215, 75, 0.2)',
+        backgroundColor: theme.secondary + '15',
+        borderColor: theme.secondary + '30',
     },
     summaryIcon: {
         width: 40,
@@ -109,5 +109,6 @@ export const createDebtsStyles = (theme: typeof Colors.light) => StyleSheet.crea
     content: {
         flex: 1,
         paddingHorizontal: 20, // Add padding to constrain list width (approx 90% on mobile)
+        paddingBottom: 150,
     }
 });

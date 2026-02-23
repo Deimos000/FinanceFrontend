@@ -1,5 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import * as SecureStore from '../utils/storage';
+import * as LocalAuthentication from 'expo-local-authentication';
+import { Platform } from 'react-native';
+import { useSandboxStore } from '../app/(tabs)/stocks/_utils/sandboxStore';
 
 interface AuthContextType {
     token: string | null;
@@ -35,9 +38,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 const storedUsername = await SecureStore.getItemAsync('username');
 
                 if (storedToken) {
+                    if (Platform.OS !== 'web') {
+                        const hasHardware = await LocalAuthentication.hasHardwareAsync();
+                        const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+
+                        if (hasHardware && isEnrolled) {
+                            const result = await LocalAuthentication.authenticateAsync({
+                                promptMessage: 'Unlock Finance App',
+                                fallbackLabel: 'Use Password',
+                                cancelLabel: 'Cancel',
+                            });
+
+                            if (!result.success) {
+                                // Authentication failed or cancelled; clear tokens and force login
+                                await SecureStore.deleteItemAsync('userToken');
+                                await SecureStore.deleteItemAsync('userId');
+                                await SecureStore.deleteItemAsync('username');
+                                setTokenState(null);
+                                setUserId(null);
+                                setUsername(null);
+                                return;
+                            }
+                        }
+                    }
+
+                    // On web or successful biometric auth (or if biometric isn't available)
                     setTokenState(storedToken);
                     setUserId(storedUserId ? parseInt(storedUserId) : null);
                     setUsername(storedUsername);
+
+                    // Pre-load sandboxes in the background right after login finishes
+                    useSandboxStore.getState().loadSandboxes();
                 }
             } catch (e) {
                 console.error("Failed to load auth state", e);

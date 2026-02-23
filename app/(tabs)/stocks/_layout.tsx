@@ -1,14 +1,17 @@
 import { Stack } from 'expo-router';
-import { STOCK_THEME } from './_utils/theme';
 import TabScreenWrapper from '@/components/ui/TabScreenWrapper';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function StockLayout() {
+    const { colors, backgroundStyle, theme } = useTheme();
+    const isCanvasBg = theme === 'dark' && (backgroundStyle === 'universe' || backgroundStyle === 'aurora');
+
     return (
         <TabScreenWrapper>
             <Stack
                 screenOptions={{
                     headerShown: false,
-                    contentStyle: { backgroundColor: STOCK_THEME.background },
+                    contentStyle: { backgroundColor: isCanvasBg ? 'transparent' : colors.background },
                     presentation: 'card',
                 }}
             >

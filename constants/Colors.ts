@@ -1,36 +1,39 @@
 /**
- * Unified Dark Theme - Black with Persian Indigo Accent
+ * Unified Dark Theme - Derived from active Color Scheme
+ * 
+ * This file re-exports Colors derived from the default scheme for backward
+ * compatibility. The actual active-scheme colors come from ThemeContext.
  */
 
-const persianIndigo = '#4B0082';
+import { Platform } from 'react-native';
+import { getColorsForScheme, getSchemeById, DEFAULT_SCHEME_ID } from './colorSchemes';
 
-export const Colors = {
-    light: {
-        text: '#000000',
-        background: '#F2F2F7', // System Gray 6 (standard iOS light background)
-        tint: persianIndigo,
-        icon: '#8e8e93',
-        tabIconDefault: '#8e8e93',
-        tabIconSelected: persianIndigo,
-        cardBackground: '#FFFFFF',
-        primary: persianIndigo,
-        secondary: '#34C759', // Green
-        accent: persianIndigo,
-        border: '#E5E5EA',
-        danger: '#FF3B30',
+const defaultScheme = getSchemeById(DEFAULT_SCHEME_ID);
+
+/** Default Colors object (used by components that don't go through ThemeContext) */
+export const Colors = getColorsForScheme(defaultScheme);
+
+export const Fonts = Platform.select({
+    ios: {
+        /** iOS `UIFontDescriptorSystemDesignDefault` */
+        sans: 'system-ui',
+        /** iOS `UIFontDescriptorSystemDesignSerif` */
+        serif: 'ui-serif',
+        /** iOS `UIFontDescriptorSystemDesignRounded` */
+        rounded: 'ui-rounded',
+        /** iOS `UIFontDescriptorSystemDesignMonospaced` */
+        mono: 'ui-monospace',
     },
-    dark: {
-        text: '#FFFFFF',
-        background: 'transparent', // Pitch Black is now transparent for Galaxy overlay
-        tint: '#fff',
-        icon: '#9BA1A6',
-        tabIconDefault: '#9BA1A6',
-        tabIconSelected: '#fff',
-        cardBackground: '#1a0b2e', // Dark Purple Card
-        primary: '#4B0082', // Persian Indigo
-        secondary: '#32D74B',
-        accent: '#4B0082', // Persian Indigo
-        border: '#2A2A2D',
-        danger: '#FF453A',
+    default: {
+        sans: 'normal',
+        serif: 'serif',
+        rounded: 'normal',
+        mono: 'monospace',
     },
-};
+    web: {
+        sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+        serif: "Georgia, 'Times New Roman', serif",
+        rounded: "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
+        mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+    },
+});

@@ -10,6 +10,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { createHomeStyles } from '@/app/styles/screens/index.styles';
 import { useIsDesktop } from '@/hooks/useIsDesktop';
 import TabScreenWrapper from '@/components/ui/TabScreenWrapper';
+import { useAuth } from '@/context/AuthContext';
 
 // Helper to group transactions by date
 const groupTransactionsByDate = (transactions: Transaction[]) => {
@@ -50,6 +51,7 @@ export default function HomeScreen() {
   const { colors: theme } = useTheme();
   const styles = useMemo(() => createHomeStyles(theme), [theme]);
   const isDesktop = useIsDesktop();
+  const { username } = useAuth();
 
   const { accounts, loading, refreshAccounts } = useBankData();
   const [refreshing, setRefreshing] = useState(false);
@@ -95,7 +97,7 @@ export default function HomeScreen() {
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
               <View>
                 <Text style={styles.subtitle}>Welcome back,</Text>
-                <Text style={[styles.title, { fontSize: 36 }]}>Denis</Text>
+                <Text style={[styles.title, { fontSize: 36 }]}>{username || 'Guest'}</Text>
               </View>
               <TouchableOpacity style={styles.profileBtn} onPress={() => router.push('/(tabs)/settings')}>
                 <Ionicons name="person" size={20} color={theme.text} />
@@ -208,7 +210,7 @@ export default function HomeScreen() {
         <View style={styles.header}>
           <View>
             <Text style={styles.subtitle}>Welcome back,</Text>
-            <Text style={styles.title}>Denis</Text>
+            <Text style={styles.title}>{username || 'Guest'}</Text>
           </View>
           <TouchableOpacity style={styles.profileBtn} onPress={() => router.push('/(tabs)/settings')}>
             <Ionicons name="person" size={20} color={theme.text} />

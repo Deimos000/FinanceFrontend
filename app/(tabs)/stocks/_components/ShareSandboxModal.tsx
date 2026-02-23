@@ -17,7 +17,7 @@ interface ShareSandboxModalProps {
 }
 
 export default function ShareSandboxModal({ visible, sandboxId, sandboxName, onClose }: ShareSandboxModalProps) {
-    const { colors } = useTheme();
+    const { colors, theme } = useTheme();
     const [shares, setShares] = useState<SandboxShare[]>([]);
     const [friends, setFriends_] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -112,7 +112,7 @@ export default function ShareSandboxModal({ visible, sandboxId, sandboxName, onC
                                 "{sandboxName}"
                             </Text>
                         </View>
-                        <TouchableOpacity onPress={onClose} style={[styles.closeBtn, { backgroundColor: 'rgba(255,255,255,0.08)' }]}>
+                        <TouchableOpacity onPress={onClose} style={[styles.closeBtn, { backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)' }]}>
                             <Ionicons name="close" size={18} color={colors.text} />
                         </TouchableOpacity>
                     </View>
@@ -134,7 +134,7 @@ export default function ShareSandboxModal({ visible, sandboxId, sandboxName, onC
                                             Shared With ({shares.length})
                                         </Text>
                                     </View>
-                                    <View style={[styles.sectionCard, { backgroundColor: 'rgba(255,255,255,0.05)' }]}>
+                                    <View style={[styles.sectionCard, { backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
                                         {shares.map((share, idx) => (
                                             <View key={share.id}>
                                                 {idx > 0 && <View style={[styles.divider, { backgroundColor: colors.border }]} />}
@@ -159,10 +159,10 @@ export default function ShareSandboxModal({ visible, sandboxId, sandboxName, onC
                                                                 styles.permBadge,
                                                                 {
                                                                     backgroundColor: share.permission === 'edit'
-                                                                        ? '#4cd96415'
+                                                                        ? colors.success + '15'
                                                                         : colors.primary + '15',
                                                                     borderColor: share.permission === 'edit'
-                                                                        ? '#4cd96450'
+                                                                        ? colors.success + '50'
                                                                         : colors.primary + '50',
                                                                 }
                                                             ]}
@@ -173,10 +173,10 @@ export default function ShareSandboxModal({ visible, sandboxId, sandboxName, onC
                                                                     <Ionicons
                                                                         name={share.permission === 'edit' ? 'create-outline' : 'eye-outline'}
                                                                         size={13}
-                                                                        color={share.permission === 'edit' ? '#4cd964' : colors.primary}
+                                                                        color={share.permission === 'edit' ? colors.success : colors.primary}
                                                                     />
                                                                     <Text style={{
-                                                                        color: share.permission === 'edit' ? '#4cd964' : colors.primary,
+                                                                        color: share.permission === 'edit' ? colors.success : colors.primary,
                                                                         fontSize: 12,
                                                                         fontWeight: '600',
                                                                         marginLeft: 4,
@@ -192,11 +192,11 @@ export default function ShareSandboxModal({ visible, sandboxId, sandboxName, onC
                                                         <TouchableOpacity
                                                             onPress={() => handleRemove(share)}
                                                             disabled={actionLoading === `remove-${share.id}`}
-                                                            style={[styles.removeBtn, { backgroundColor: '#ff453a15' }]}
+                                                            style={[styles.removeBtn, { backgroundColor: colors.danger + '15' }]}
                                                         >
                                                             {actionLoading === `remove-${share.id}`
-                                                                ? <ActivityIndicator size="small" color="#e74c3c" />
-                                                                : <Ionicons name="trash-outline" size={15} color="#ff453a" />
+                                                                ? <ActivityIndicator size="small" color={colors.danger} />
+                                                                : <Ionicons name="trash-outline" size={15} color={colors.danger} />
                                                             }
                                                         </TouchableOpacity>
                                                     </View>
@@ -211,14 +211,14 @@ export default function ShareSandboxModal({ visible, sandboxId, sandboxName, onC
                             {unsharedFriends.length > 0 && (
                                 <View style={styles.section}>
                                     <View style={styles.sectionHeader}>
-                                        <View style={[styles.sectionIcon, { backgroundColor: '#FFA50020' }]}>
-                                            <Ionicons name="person-add" size={14} color="#FFA500" />
+                                        <View style={[styles.sectionIcon, { backgroundColor: colors.warning + '20' }]}>
+                                            <Ionicons name="person-add" size={14} color={colors.warning} />
                                         </View>
                                         <Text style={[styles.sectionTitle, { color: colors.icon }]}>
                                             Add Friends
                                         </Text>
                                     </View>
-                                    <View style={[styles.sectionCard, { backgroundColor: 'rgba(255,255,255,0.05)' }]}>
+                                    <View style={[styles.sectionCard, { backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
                                         {unsharedFriends.map((friend, idx) => (
                                             <View key={friend.friend_id}>
                                                 {idx > 0 && <View style={[styles.divider, { backgroundColor: colors.border }]} />}
@@ -252,10 +252,10 @@ export default function ShareSandboxModal({ visible, sandboxId, sandboxName, onC
                                                         <TouchableOpacity
                                                             onPress={() => handleShare(friend.friend_id, 'edit')}
                                                             disabled={actionLoading === `share-${friend.friend_id}`}
-                                                            style={[styles.shareBtn, { backgroundColor: '#4cd96415', borderColor: '#4cd96450' }]}
+                                                            style={[styles.shareBtn, { backgroundColor: colors.success + '15', borderColor: colors.success + '50' }]}
                                                         >
-                                                            <Ionicons name="create-outline" size={14} color="#4cd964" />
-                                                            <Text style={{ color: '#4cd964', fontSize: 12, fontWeight: '600', marginLeft: 4 }}>Edit</Text>
+                                                            <Ionicons name="create-outline" size={14} color={colors.success} />
+                                                            <Text style={{ color: colors.success, fontSize: 12, fontWeight: '600', marginLeft: 4 }}>Edit</Text>
                                                         </TouchableOpacity>
                                                     </View>
                                                 </View>
@@ -267,7 +267,7 @@ export default function ShareSandboxModal({ visible, sandboxId, sandboxName, onC
 
                             {/* Empty state */}
                             {friends.length === 0 && (
-                                <View style={[styles.emptyState, { backgroundColor: 'rgba(255,255,255,0.05)' }]}>
+                                <View style={[styles.emptyState, { backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
                                     <View style={[styles.emptyIcon, { backgroundColor: colors.primary + '15' }]}>
                                         <Ionicons name="people-outline" size={32} color={colors.primary} style={{ opacity: 0.7 }} />
                                     </View>
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
     handle: {
         width: 40,
         height: 4,
-        backgroundColor: 'rgba(255,255,255,0.2)',
+        backgroundColor: 'rgba(150,150,150,0.3)',
         borderRadius: 2,
         alignSelf: 'center',
         marginTop: 12,

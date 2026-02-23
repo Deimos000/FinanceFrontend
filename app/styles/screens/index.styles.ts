@@ -37,7 +37,7 @@ export const createHomeStyles = (theme: typeof Colors.light) => StyleSheet.creat
         borderColor: theme.border,
     },
     scrollContent: {
-        paddingBottom: 40,
+        paddingBottom: 150,
         paddingHorizontal: 20,
     },
     section: {

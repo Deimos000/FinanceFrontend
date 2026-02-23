@@ -8,7 +8,7 @@ export const createTransactionsStyles = (theme: typeof Colors.light) => StyleShe
     },
     content: {
         padding: 20,
-        paddingBottom: 40,
+        paddingBottom: 150,
     },
     header: {
         flexDirection: 'row',

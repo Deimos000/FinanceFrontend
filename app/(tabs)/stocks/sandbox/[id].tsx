@@ -5,6 +5,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/context/ThemeContext';
 import { getSandboxPortfolio, tradeStock, getSandboxTransactions, getStockQuote } from '../_utils/api';
+import { useSandboxStore } from '../_utils/sandboxStore';
 import { SandboxPortfolio, SandboxTransaction, SandboxPortfolioItem, Stock } from '../_utils/types';
 import { InteractiveChart } from '../_components/InteractiveChart';
 import { useFocusEffect } from '@react-navigation/native';
@@ -15,15 +16,19 @@ import { useIsDesktop } from '@/hooks/useIsDesktop';
 export default function SandboxDetail() {
     const { id } = useLocalSearchParams();
     const sandboxId = Number(id);
-    const { colors } = useTheme();
+    const { colors, theme } = useTheme();
     const router = useRouter();
     const insets = useSafeAreaInsets();
     const isDesktop = useIsDesktop();
 
-    const [portfolio, setPortfolio] = useState<SandboxPortfolio | null>(null);
+    const { loadPortfolio, portfolioCache } = useSandboxStore();
+    // Initialize immediately with cache if it exists
+    const initialPortfolio = portfolioCache[sandboxId] || null;
+    const [portfolio, setPortfolio] = useState<SandboxPortfolio | null>(initialPortfolio);
     const [transactions, setTransactions] = useState<SandboxTransaction[]>([]);
     const [stockDetails, setStockDetails] = useState<Record<string, Stock>>({});
-    const [loading, setLoading] = useState(true);
+    // Loading is only true if we don't have cached data
+    const [loading, setLoading] = useState(!initialPortfolio);
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [permission, setPermission] = useState<string>('owner');
@@ -42,8 +47,10 @@ export default function SandboxDetail() {
     const loadData = useCallback(async () => {
         try {
             setError(null);
+
+            // If checking cache here later could be useful, but loadPortfolio handles the fetch
             const [portData, txData] = await Promise.all([
-                getSandboxPortfolio(sandboxId),
+                loadPortfolio(sandboxId),
                 getSandboxTransactions(sandboxId)
             ]);
 
@@ -115,7 +122,7 @@ export default function SandboxDetail() {
     const totalGain = currentEquity - initialBalance;
     const totalGainPercent = initialBalance > 0 ? (totalGain / initialBalance) * 100 : 0;
     const isPositive = totalGain >= 0;
-    const displayColor = isPositive ? '#4cd964' : colors.danger;
+    const displayColor = isPositive ? colors.secondary : colors.danger;
 
     const formatDate = (ts: number | null) => {
         if (!ts) return '';
@@ -197,7 +204,7 @@ export default function SandboxDetail() {
                     {portfolio?.equity_history && portfolio.equity_history.length > 0 ? (
                         <InteractiveChart
                             data={portfolio.equity_history}
-                            color={isPositive ? '#4cd964' : colors.danger}
+                            color={isPositive ? colors.secondary : colors.danger}
                             onScrub={onScrub}
                         />
                     ) : (
@@ -225,7 +232,7 @@ export default function SandboxDetail() {
                 )}
 
                 {/* Positions Section */}
-                <View style={{ marginHorizontal: 20, backgroundColor: '#1A0B2E', borderRadius: 20, padding: 24, marginBottom: 40 }}>
+                <View style={{ marginHorizontal: 20, backgroundColor: theme === 'dark' ? '#1A0B2E' : colors.cardBackground, borderRadius: 20, padding: 24, marginBottom: 40, borderWidth: theme === 'light' ? 1 : 0, borderColor: colors.border }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                             <View style={{ padding: 8, borderRadius: 8, backgroundColor: colors.primary + '20' }}>
@@ -248,7 +255,7 @@ export default function SandboxDetail() {
                                 <TouchableOpacity
                                     key={item.symbol}
                                     style={{
-                                        backgroundColor: 'rgba(255,255,255,0.05)',
+                                        backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
                                         borderRadius: 12,
                                         padding: 16,
                                         flexDirection: 'row',
@@ -258,7 +265,7 @@ export default function SandboxDetail() {
                                     onPress={() => navigateToDetails(item.symbol)}
                                 >
                                     <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                                        <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' }}>
+                                        <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.04)', justifyContent: 'center', alignItems: 'center' }}>
                                             <Text style={{ color: colors.text, fontSize: 18, fontWeight: 'bold' }}>{item.symbol[0]}</Text>
                                         </View>
                                         <View style={{ flex: 1, paddingRight: 10 }}>

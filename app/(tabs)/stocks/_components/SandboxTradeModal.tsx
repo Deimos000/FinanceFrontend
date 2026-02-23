@@ -19,7 +19,7 @@ interface SandboxTradeModalProps {
 
 
 export const SandboxTradeModal = ({ sandboxId, availableCash, onClose, onSuccess, initialStock, currentPosition, tradeHistory = [] }: SandboxTradeModalProps) => {
-    const { colors: theme } = useTheme();
+    const { colors: theme, theme: currentTheme } = useTheme();
     const isDesktop = useIsDesktop();
     const [step, setStep] = useState<'SEARCH' | 'TRADE'>(initialStock ? 'TRADE' : 'SEARCH');
     // Cast initialStock to Stock if present, relying on it being populated enough or fetched shortly
@@ -211,7 +211,7 @@ export const SandboxTradeModal = ({ sandboxId, availableCash, onClose, onSuccess
                 <View style={{ height: 1, backgroundColor: theme.border, marginVertical: 8 }} />
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                     <Text style={{ color: theme.secondary }}>Total Return</Text>
-                    <Text style={{ color: isPos ? '#4cd964' : theme.danger, fontWeight: 'bold' }}>
+                    <Text style={{ color: isPos ? theme.success : theme.danger, fontWeight: 'bold' }}>
                         {isPos ? '+' : ''}{currentPosition.gain_loss.toFixed(2)} ({currentPosition.gain_loss_percent.toFixed(2)}%)
                     </Text>
                 </View>
@@ -220,10 +220,10 @@ export const SandboxTradeModal = ({ sandboxId, availableCash, onClose, onSuccess
     };
 
     return (
-        <View style={isDesktop ? styles.desktopOverlay : { flex: 1, backgroundColor: '#000000' }}>
+        <View style={isDesktop ? styles.desktopOverlay : { flex: 1, backgroundColor: theme.cardBackground }}>
             <View style={[
                 isDesktop ? styles.desktopModalCard : { flex: 1 },
-                { backgroundColor: isDesktop ? theme.cardBackground : '#000000', borderColor: theme.border }
+                { backgroundColor: theme.cardBackground, borderColor: theme.border }
             ]}>
                 {/* Header */}
                 <View style={[styles.header, { borderBottomColor: theme.border }]}>
@@ -274,7 +274,7 @@ export const SandboxTradeModal = ({ sandboxId, availableCash, onClose, onSuccess
                                         <Text style={{ fontSize: 32, fontWeight: 'bold', color: theme.text }}>
                                             ${selectedStock?.price.toFixed(2)}
                                         </Text>
-                                        <Text style={{ color: (selectedStock?.changePercent || 0) >= 0 ? '#4cd964' : theme.danger }}>
+                                        <Text style={{ color: (selectedStock?.changePercent || 0) >= 0 ? theme.success : theme.danger }}>
                                             {(selectedStock?.changePercent || 0) >= 0 ? '+' : ''}{selectedStock?.changePercent.toFixed(2)}%
                                         </Text>
                                     </View>
@@ -305,7 +305,7 @@ export const SandboxTradeModal = ({ sandboxId, availableCash, onClose, onSuccess
                                     </View>
 
                                     {/* Mode Toggles */}
-                                    <View style={{ flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: 4, marginBottom: 24 }}>
+                                    <View style={{ flexDirection: 'row', backgroundColor: currentTheme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', borderRadius: 12, padding: 4, marginBottom: 24 }}>
                                         <TouchableOpacity
                                             style={{ flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 8, backgroundColor: mode === 'DOLLARS' ? theme.primary : 'transparent' }}
                                             onPress={() => { setMode('DOLLARS'); setAmount(''); }}
@@ -326,7 +326,7 @@ export const SandboxTradeModal = ({ sandboxId, availableCash, onClose, onSuccess
                                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
                                             <TouchableOpacity
                                                 onPress={handleDecrement}
-                                                style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' }}
+                                                style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: currentTheme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.04)', alignItems: 'center', justifyContent: 'center' }}
                                             >
                                                 <Ionicons name="remove" size={24} color={theme.text} />
                                             </TouchableOpacity>
@@ -350,7 +350,7 @@ export const SandboxTradeModal = ({ sandboxId, availableCash, onClose, onSuccess
 
                                             <TouchableOpacity
                                                 onPress={handleIncrement}
-                                                style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' }}
+                                                style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: currentTheme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.04)', alignItems: 'center', justifyContent: 'center' }}
                                             >
                                                 <Ionicons name="add" size={24} color={theme.text} />
                                             </TouchableOpacity>
@@ -358,7 +358,7 @@ export const SandboxTradeModal = ({ sandboxId, availableCash, onClose, onSuccess
 
                                         {((tradeType === 'SELL' && maxSharesSell > 0) || (tradeType === 'BUY' && maxDollarsBuy > 0)) && (
                                             <View style={{ alignItems: 'center', marginTop: 10 }}>
-                                                <TouchableOpacity onPress={setMaxAmount} style={{ paddingHorizontal: 12, paddingVertical: 6, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 12, borderWidth: 1, borderColor: theme.border }}>
+                                                <TouchableOpacity onPress={setMaxAmount} style={{ paddingHorizontal: 12, paddingVertical: 6, backgroundColor: currentTheme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', borderRadius: 12, borderWidth: 1, borderColor: theme.border }}>
                                                     <Text style={{ color: theme.secondary, fontSize: 13, fontWeight: '600' }}>
                                                         Max Available: {
                                                             tradeType === 'SELL'

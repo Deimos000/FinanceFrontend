@@ -22,7 +22,7 @@ export default function StockDetail() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
     const { isWatched, addToWatchlist, removeFromWatchlist } = useStockStore();
-    const { colors: theme } = useTheme();
+    const { colors: theme, theme: currentTheme } = useTheme();
     const isDesktop = useIsDesktop();
     const { width: windowWidth } = useWindowDimensions();
 
@@ -94,7 +94,7 @@ export default function StockDetail() {
     if (loading && !stock) {
         return (
             <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', backgroundColor: theme.background }]}>
-                <StatusBar barStyle={theme.text === '#FFFFFF' ? "light-content" : "dark-content"} />
+                <StatusBar barStyle={currentTheme === 'dark' ? "light-content" : "dark-content"} />
                 <ActivityIndicator color={theme.primary} size="large" />
             </View>
         );
@@ -128,10 +128,12 @@ export default function StockDetail() {
     const col2Width: any = Platform.select({ web: 'calc(66.6667% - 8px)', default: '64%' });
 
     const gridCardBase = {
-        backgroundColor: '#1A0B2E', // Purple Background
+        backgroundColor: currentTheme === 'dark' ? '#1A0B2E' : theme.cardBackground,
         borderRadius: 16,
         height: ROW_HEIGHT,
         overflow: 'hidden' as const,
+        borderWidth: currentTheme === 'light' ? 1 : 0,
+        borderColor: theme.border,
     };
 
     const noSectionStyle = { paddingHorizontal: 0, marginBottom: 0 };
@@ -146,7 +148,7 @@ export default function StockDetail() {
 
         return (
             <View style={{ flex: 1, backgroundColor: theme.background }}>
-                <StatusBar barStyle={theme.text === '#FFFFFF' ? "light-content" : "dark-content"} />
+                <StatusBar barStyle={currentTheme === 'dark' ? "light-content" : "dark-content"} />
 
                 <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 32, paddingTop: 24, paddingBottom: 60, maxWidth: 1400, alignSelf: 'center' as any, width: '100%' as any }}>
                     {/* Inline Back Button */}
@@ -181,7 +183,7 @@ export default function StockDetail() {
                                                 <Ionicons
                                                     name={isFav ? "star" : "star-outline"}
                                                     size={22}
-                                                    color={isFav ? '#EAB308' : theme.icon}
+                                                    color={isFav ? '#EAB308' : (currentTheme === 'dark' ? theme.icon : theme.text)}
                                                 />
                                             </TouchableOpacity>
                                         </View>
@@ -340,7 +342,7 @@ export default function StockDetail() {
         <View style={{ flex: 1, backgroundColor: theme.background }}>
             <ScrollView style={styles.container} scrollEnabled={scrubPrice === null}>
                 <View style={[styles.content, { paddingTop: insets.top, paddingBottom: 100 + insets.bottom }]}>
-                    <StatusBar barStyle={theme.text === '#FFFFFF' ? "light-content" : "dark-content"} />
+                    <StatusBar barStyle={currentTheme === 'dark' ? "light-content" : "dark-content"} />
 
                     <StockHeader
                         stock={stock}
@@ -408,7 +410,7 @@ export default function StockDetail() {
                     {
                         top: 80,
                         backgroundColor: theme.primary,
-                        borderColor: '#FFFFFF',
+                        borderColor: currentTheme === 'dark' ? '#FFFFFF' : theme.primary,
                         shadowColor: '#000',
                         elevation: 20,
                     }

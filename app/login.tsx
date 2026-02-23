@@ -6,6 +6,15 @@ import { BACKEND_URL } from '../utils/api';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
+import Logo from '../components/ui/Logo';
+import AnimatedLoginLogo from '../components/ui/AnimatedLoginLogo';
+
+// Use the web-safe canvas version on web, and the Skia version on native.
+// This avoids the Skia PictureRecorder error which occurs when Skia is used
+// on web without the required LoadSkiaWeb() initialization.
+const ParticleBackground = Platform.OS === 'web'
+    ? require('../components/ui/ParticleBackground.web').default
+    : require('../components/ui/ParticleBackground').default;
 
 const { width } = Dimensions.get('window');
 
@@ -19,7 +28,8 @@ export default function LoginScreen() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const primaryColor = '#4B0082'; // Persian Indigo
+    const { colors: themeColors } = useTheme();
+    const primaryColor = themeColors.primary;
 
     const handleAuth = async () => {
         if (!username || !password) {
@@ -59,84 +69,86 @@ export default function LoginScreen() {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.container}
         >
+            {/* Galaxy background — only on login screen */}
+            <ParticleBackground />
             {/* Glassmorphic overlay for the form */}
             <View style={styles.centerWrapper}>
-                <BlurView intensity={15} tint="dark" style={styles.glassCard}>
-                    <View style={styles.header}>
-                        <View style={styles.logoContainer}>
-                            <View style={[styles.ring, styles.ring1]} />
-                            <View style={[styles.ring, styles.ring2]} />
-                        </View>
-                        <Text style={styles.title}>
-                            {isLogin ? 'Welcome Back' : 'Create Account'}
-                        </Text>
-                        <Text style={styles.subtitle}>
-                            Deimos Finance
-                        </Text>
-                    </View>
-
-                    {error ? (
-                        <View style={styles.errorContainer}>
-                            <Ionicons name="alert-circle" size={20} color="#ff4444" />
-                            <Text style={styles.errorText}>{error}</Text>
-                        </View>
-                    ) : null}
-
-                    <View style={styles.inputContainer}>
-                        <Text style={styles.label}>Username</Text>
-                        <View style={styles.inputWrapper}>
-                            <Ionicons name="person-outline" size={20} color="rgba(255,255,255,0.7)" style={styles.inputIcon} />
-                            <TextInput
-                                style={[styles.input, Platform.OS === 'web' && { outlineStyle: 'none', boxShadow: 'none' } as any]}
-                                value={username}
-                                onChangeText={setUsername}
-                                placeholder="Enter your username"
-                                placeholderTextColor="rgba(255,255,255,0.5)"
-                                autoCapitalize="none"
-                                selectionColor="#fff"
-                            />
-                        </View>
-                    </View>
-
-                    <View style={styles.inputContainer}>
-                        <Text style={styles.label}>Password</Text>
-                        <View style={styles.inputWrapper}>
-                            <Ionicons name="lock-closed-outline" size={20} color="rgba(255,255,255,0.7)" style={styles.inputIcon} />
-                            <TextInput
-                                style={[styles.input, Platform.OS === 'web' && { outlineStyle: 'none', boxShadow: 'none' } as any]}
-                                value={password}
-                                onChangeText={setPassword}
-                                placeholder="Enter your password"
-                                placeholderTextColor="rgba(255,255,255,0.5)"
-                                secureTextEntry
-                                selectionColor="#fff"
-                            />
-                        </View>
-                    </View>
-
-                    <TouchableOpacity
-                        style={styles.button}
-                        onPress={handleAuth}
-                        disabled={loading}
-                    >
-                        {loading ? (
-                            <ActivityIndicator color="#fff" />
-                        ) : (
-                            <Text style={styles.buttonText}>{isLogin ? 'Sign In' : 'Sign Up'}</Text>
-                        )}
-                    </TouchableOpacity>
-
-                    <View style={styles.footer}>
-                        <Text style={styles.footerText}>
-                            {isLogin ? "Don't have an account? " : "Already have an account? "}
-                        </Text>
-                        <TouchableOpacity onPress={() => setIsLogin(!isLogin)}>
-                            <Text style={styles.switchText}>
-                                {isLogin ? 'Sign Up' : 'Sign In'}
+                <View style={styles.glassCard}>
+                    <BlurView intensity={15} tint="dark" style={StyleSheet.absoluteFill} />
+                    <View style={styles.glassContent}>
+                        <View style={styles.header}>
+                            <AnimatedLoginLogo size={180} style={styles.logo} />
+                            <Text style={styles.title}>
+                                {isLogin ? 'Welcome Back' : 'Create Account'}
                             </Text>
+                            <Text style={styles.subtitle}>
+                                Deimos Finance
+                            </Text>
+                        </View>
+
+                        {error ? (
+                            <View style={styles.errorContainer}>
+                                <Ionicons name="alert-circle" size={20} color="#ff4444" />
+                                <Text style={styles.errorText}>{error}</Text>
+                            </View>
+                        ) : null}
+
+                        <View style={styles.inputContainer}>
+                            <Text style={styles.label}>Username</Text>
+                            <View style={styles.inputWrapper}>
+                                <Ionicons name="person-outline" size={20} color="rgba(255,255,255,0.7)" style={styles.inputIcon} />
+                                <TextInput
+                                    style={[styles.input, Platform.OS === 'web' && { outlineStyle: 'none', boxShadow: 'none' } as any]}
+                                    value={username}
+                                    onChangeText={setUsername}
+                                    placeholder="Enter your username"
+                                    placeholderTextColor="rgba(255,255,255,0.7)"
+                                    autoCapitalize="none"
+                                    selectionColor="#fff"
+                                />
+                            </View>
+                        </View>
+
+                        <View style={styles.inputContainer}>
+                            <Text style={styles.label}>Password</Text>
+                            <View style={styles.inputWrapper}>
+                                <Ionicons name="lock-closed-outline" size={20} color="rgba(255,255,255,0.7)" style={styles.inputIcon} />
+                                <TextInput
+                                    style={[styles.input, Platform.OS === 'web' && { outlineStyle: 'none', boxShadow: 'none' } as any]}
+                                    value={password}
+                                    onChangeText={setPassword}
+                                    placeholder="Enter your password"
+                                    placeholderTextColor="rgba(255,255,255,0.7)"
+                                    secureTextEntry
+                                    selectionColor="#fff"
+                                />
+                            </View>
+                        </View>
+
+                        <TouchableOpacity
+                            style={styles.button}
+                            onPress={handleAuth}
+                            disabled={loading}
+                        >
+                            {loading ? (
+                                <ActivityIndicator color="#fff" />
+                            ) : (
+                                <Text style={styles.buttonText}>{isLogin ? 'Sign In' : 'Sign Up'}</Text>
+                            )}
                         </TouchableOpacity>
+
+                        <View style={styles.footer}>
+                            <Text style={styles.footerText}>
+                                {isLogin ? "Don't have an account? " : "Already have an account? "}
+                            </Text>
+                            <TouchableOpacity onPress={() => setIsLogin(!isLogin)}>
+                                <Text style={styles.switchText}>
+                                    {isLogin ? 'Sign Up' : 'Sign In'}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
-                </BlurView>
+                </View>
             </View>
         </KeyboardAvoidingView>
     );
@@ -145,8 +157,8 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        // Transparent to show global galaxy background
-        backgroundColor: 'transparent',
+        backgroundColor: '#000000',
+        position: 'relative',
     },
     centerWrapper: {
         flex: 1,
@@ -160,54 +172,27 @@ const styles = StyleSheet.create({
     glassCard: {
         width: '100%',
         maxWidth: 420,
-        borderRadius: 40, // Increased radius for pill-like shape in reference
-        padding: 40,
+        borderRadius: 40,
         overflow: 'hidden',
         borderWidth: 1.5,
-        borderColor: 'rgba(255, 255, 255, 0.15)',
-        borderTopColor: 'rgba(255, 255, 255, 0.4)', // White rim light on top 
-        borderLeftColor: 'rgba(255, 255, 255, 0.25)',
-        borderBottomColor: 'rgba(255, 255, 255, 0.05)', // Shadow rim logic on bottom
-        borderRightColor: 'rgba(255, 255, 255, 0.1)',
-        backgroundColor: 'transparent',
+        borderColor: 'rgba(255, 255, 255, 0.25)', // Unified border color to fix Android crash
+        backgroundColor: 'rgba(25, 10, 40, 0.4)', // Slightly dark backdrop
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 20 },
         shadowOpacity: 0.1,
         shadowRadius: 30,
         elevation: 10,
     },
+    glassContent: {
+        padding: 40,
+        zIndex: 1, // Ensures content sits above the absolute BlurView
+    },
     header: {
         alignItems: 'center',
         marginBottom: 40,
     },
-    logoContainer: {
-        width: 80,
-        height: 80,
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
+    logo: {
         marginBottom: 20,
-        position: 'relative',
-    },
-    ring: {
-        position: 'absolute',
-        width: 50,
-        height: 50,
-        borderRadius: 25,
-        borderWidth: 3,
-        borderColor: '#fff',
-        shadowColor: '#a855f7',
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.6,
-        shadowRadius: 10,
-    },
-    ring1: {
-        left: 5,
-        borderColor: '#fff',
-    },
-    ring2: {
-        right: 5,
-        borderColor: '#9333ea', // Deep purple accent
     },
     title: {
         fontSize: 32,
@@ -252,10 +237,10 @@ const styles = StyleSheet.create({
     inputWrapper: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: 'transparent',
+        backgroundColor: 'rgba(255, 255, 255, 0.15)',
         borderRadius: 20,
-        borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.15)',
+        borderWidth: 1.5,
+        borderColor: 'rgba(255, 255, 255, 0.3)',
     },
     inputIcon: {
         paddingHorizontal: 16,
@@ -276,11 +261,6 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         marginTop: 10,
-        shadowColor: '#fff',
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.1,
-        shadowRadius: 10,
-        elevation: 5,
     },
     buttonText: {
         color: '#ffffff',

@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
     },
     content: {
         padding: 20,
-        paddingBottom: 120, // Ensure content clears tab bar
+        paddingBottom: 150, // Ensure content clears tab bar
         gap: 15,
     },
     card: {

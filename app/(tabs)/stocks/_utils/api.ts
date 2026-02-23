@@ -1,5 +1,6 @@
 import { BACKEND_URL, api } from '@/utils/api';
 import { Stock, Sandbox, SandboxPortfolio } from './types';
+export { Stock, Sandbox, SandboxPortfolio };
 
 // --- Mappers ---
 

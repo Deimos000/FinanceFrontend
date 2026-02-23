@@ -4,6 +4,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react-native';
 import { useDebtsDatabase, Debt } from '../../hooks/useDebtsDatabase';
 import { useTheme } from '@/context/ThemeContext';
 import { createDebtsListStyles } from '@/app/styles/components/DebtsList.styles';
+import { useIsDesktop } from '@/hooks/useIsDesktop';
 
 if (Platform.OS === 'android') {
     if (UIManager.setLayoutAnimationEnabledExperimental) {
@@ -16,8 +17,9 @@ export default function DebtsList({ type, refreshTrigger, onRefresh }: { type: '
     const [debts, setDebts] = useState<Debt[]>([]);
     const [expandedId, setExpandedId] = useState<number | null>(null);
     const [subAmount, setSubAmount] = useState('');
-    const { colors: theme } = useTheme();
+    const { colors: theme, theme: currentTheme } = useTheme();
     const styles = useMemo(() => createDebtsListStyles(theme), [theme]);
+    const isDesktop = useIsDesktop();
 
     useEffect(() => {
         if (isReady) {
@@ -63,7 +65,7 @@ export default function DebtsList({ type, refreshTrigger, onRefresh }: { type: '
             renderItem={({ item }) => {
                 const isExpanded = expandedId === item.id;
                 return (
-                    <View style={styles.card}>
+                    <View style={[styles.card, (isDesktop && currentTheme === 'light') && { backgroundColor: theme.background, borderWidth: 1, borderColor: theme.border }]}>
                         <TouchableOpacity onPress={() => toggleExpand(item.id)} style={styles.cardHeader}>
                             <View>
                                 <Text style={styles.desc}>{item.description}</Text>
@@ -78,7 +80,7 @@ export default function DebtsList({ type, refreshTrigger, onRefresh }: { type: '
                         </TouchableOpacity>
 
                         {isExpanded && (
-                            <View style={styles.expandedContent}>
+                            <View style={[styles.expandedContent, (isDesktop && currentTheme === 'light') && { backgroundColor: theme.cardBackground }]}>
                                 <Text style={styles.originalAmount}>Original debt: {item.amount.toFixed(2)} €</Text>
 
                                 <View style={styles.subList}>

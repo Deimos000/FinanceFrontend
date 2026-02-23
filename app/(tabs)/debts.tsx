@@ -19,7 +19,7 @@ type Tab = 'OVERALL' | 'OWED_BY_ME' | 'OWED_TO_ME';
 export default function DebtsScreen() {
     const insets = useSafeAreaInsets();
     const { isReady, getTotals } = useDebtsDatabase();
-    const { colors: theme } = useTheme();
+    const { colors: theme, theme: currentTheme } = useTheme();
     const styles = useMemo(() => createDebtsStyles(theme), [theme]);
     const isDesktop = useIsDesktop();
 
@@ -58,9 +58,9 @@ export default function DebtsScreen() {
         return (
             <TabScreenWrapper>
                 <View style={[styles.container, { paddingTop: 20 }]}>
-                    <StatusBar barStyle={theme.text === '#FFFFFF' ? "light-content" : "dark-content"} />
+                    <StatusBar barStyle={currentTheme === 'dark' ? "light-content" : "dark-content"} />
 
-                    <View style={{ maxWidth: 1200, alignSelf: 'center' as any, width: '100%' as any, flex: 1, paddingHorizontal: 32, paddingBottom: Platform.OS === 'web' ? '5vh' : 40 }}>
+                    <View style={[{ maxWidth: 1200, alignSelf: 'center' as any, width: '100%' as any, flex: 1, paddingHorizontal: 32, paddingBottom: 40 }, Platform.OS === 'web' && { paddingBottom: '5vh' } as any]}>
                         {/* Header */}
                         <View style={styles.header}>
                             <Text style={[styles.title, { fontSize: 32 }]}>Debts</Text>
@@ -74,7 +74,7 @@ export default function DebtsScreen() {
                             {/* Left Pane — Summary & Tabs */}
                             <View style={{ width: 320, gap: 24 }}>
                                 {/* Summary Cards */}
-                                <View style={{ backgroundColor: '#1A0B2E', borderRadius: 20, padding: 24 }}>
+                                <View style={{ backgroundColor: currentTheme === 'dark' ? '#1A0B2E' : theme.cardBackground, borderRadius: 20, padding: 24, borderWidth: currentTheme === 'light' ? 1 : 0, borderColor: theme.border }}>
                                     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
                                         <View style={{ padding: 10, borderRadius: 12, backgroundColor: theme.primary + '20', marginRight: 12 }}>
                                             <PieChart size={24} color={theme.primary} />
@@ -116,7 +116,7 @@ export default function DebtsScreen() {
                                 </View>
 
                                 {/* Tabs */}
-                                <View style={{ backgroundColor: '#1A0B2E', borderRadius: 20, padding: 24, flex: 1 }}>
+                                <View style={{ backgroundColor: currentTheme === 'dark' ? '#1A0B2E' : theme.cardBackground, borderRadius: 20, padding: 24, flex: 1, borderWidth: currentTheme === 'light' ? 1 : 0, borderColor: theme.border }}>
                                     <Text style={{ fontSize: 20, fontWeight: '700', color: theme.text, marginBottom: 16 }}>Filters</Text>
                                     <View style={[styles.tabsContainer, { flexDirection: 'column', gap: 4, padding: 0, backgroundColor: 'transparent' }]}>
                                         {(['OVERALL', 'OWED_BY_ME', 'OWED_TO_ME'] as Tab[]).map(tab => (
@@ -143,7 +143,7 @@ export default function DebtsScreen() {
                             </View>
 
                             {/* Right Pane — Content */}
-                            <View style={{ flex: 1, backgroundColor: '#1A0B2E', borderRadius: 20, padding: 24, height: '100%', overflow: 'hidden' }}>
+                            <View style={{ flex: 1, backgroundColor: currentTheme === 'dark' ? '#1A0B2E' : theme.cardBackground, borderRadius: 20, padding: 24, height: '100%', overflow: 'hidden', borderWidth: currentTheme === 'light' ? 1 : 0, borderColor: theme.border }}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 24 }}>
                                     <View style={{ padding: 10, borderRadius: 12, backgroundColor: theme.primary + '20', marginRight: 12 }}>
                                         <Users size={24} color={theme.primary} />

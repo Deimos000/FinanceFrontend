@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter, usePathname } from 'expo-router';
 import { useTheme } from '@/context/ThemeContext';
 import { LinearGradient } from 'expo-linear-gradient';
+import Logo from './ui/Logo';
 
 interface NavItem {
     name: string;
@@ -35,10 +36,11 @@ export default function DesktopSidebar() {
         <View style={[styles.container, { backgroundColor: theme.cardBackground, borderRightColor: theme.border }]}>
             {/* Logo / Brand */}
             <View style={styles.brand}>
-                <View style={styles.logoCircle}>
-                    <Ionicons name="diamond" size={22} color="#FFFFFF" />
-                </View>
-                <Text style={styles.brandText}>Finance</Text>
+                <Logo
+                    size={32}
+                    style={styles.logoCircle}
+                />
+                <Text style={[styles.brandText, { color: theme.text }]}>Finance</Text>
             </View>
 
             {/* Navigation */}
@@ -51,14 +53,14 @@ export default function DesktopSidebar() {
                             key={item.route}
                             style={[
                                 styles.navItem,
-                                active && styles.navItemActive,
+                                active && [styles.navItemActive, { shadowColor: theme.primaryLight }],
                             ]}
                             onPress={() => router.navigate(item.route as any)}
                             activeOpacity={0.7}
                         >
                             {active && (
                                 <LinearGradient
-                                    colors={['#7F5AF0', '#4B0082']}
+                                    colors={[theme.primaryLight, theme.primary]}
                                     start={{ x: 0, y: 0 }}
                                     end={{ x: 1, y: 0 }}
                                     style={[StyleSheet.absoluteFill, { borderRadius: 12 }]}
@@ -67,12 +69,12 @@ export default function DesktopSidebar() {
                             <Ionicons
                                 name={active ? item.iconFocused : item.icon}
                                 size={20}
-                                color={active ? '#FFFFFF' : '#8E8EA0'}
+                                color={active ? '#FFFFFF' : theme.icon}
                             />
                             <Text
                                 style={[
                                     styles.navLabel,
-                                    { color: active ? '#FFFFFF' : '#8E8EA0' },
+                                    { color: active ? '#FFFFFF' : theme.icon },
                                     active && styles.navLabelActive,
                                 ]}
                             >
@@ -86,8 +88,8 @@ export default function DesktopSidebar() {
 
             {/* Footer */}
             <View style={styles.footer}>
-                <View style={styles.footerDivider} />
-                <Text style={styles.footerVersion}>v1.0.2</Text>
+                <View style={[styles.footerDivider, { backgroundColor: theme.border }]} />
+                <Text style={[styles.footerVersion, { color: theme.icon }]}>v1.0.2</Text>
             </View>
         </View>
     );
@@ -110,23 +112,11 @@ const styles = StyleSheet.create({
         marginBottom: 24,
     },
     logoCircle: {
-        width: 40,
-        height: 40,
-        borderRadius: 12,
-        backgroundColor: '#4B0082',
-        justifyContent: 'center',
-        alignItems: 'center',
         marginRight: 12,
-        ...Platform.select({
-            web: {
-                boxShadow: '0 4px 12px rgba(75, 0, 130, 0.4)',
-            },
-        }),
     },
     brandText: {
         fontSize: 20,
         fontWeight: '700',
-        color: '#FFFFFF',
         letterSpacing: -0.5,
     },
     nav: {
@@ -143,7 +133,6 @@ const styles = StyleSheet.create({
         position: 'relative',
     },
     navItemActive: {
-        shadowColor: '#7F5AF0',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
@@ -156,7 +145,7 @@ const styles = StyleSheet.create({
         bottom: 8,
         width: 3,
         borderRadius: 2,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: '#FFFFFF', // This remains white as it is on a primary color gradient
         shadowColor: '#FFFFFF',
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 0.8,
@@ -177,12 +166,10 @@ const styles = StyleSheet.create({
     },
     footerDivider: {
         height: 1,
-        backgroundColor: '#2A2A4A',
         marginBottom: 16,
     },
     footerVersion: {
         fontSize: 11,
-        color: '#555570',
         textAlign: 'center',
     },
 });

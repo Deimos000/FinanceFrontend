@@ -4,28 +4,28 @@ import { Stock } from '../_utils/types';
 import { useTheme } from '@/context/ThemeContext';
 
 export const StockListItem = ({ item, onPress }: { item: Stock; onPress: () => void }) => {
-    const { colors: theme } = useTheme();
+    const { colors, theme: currentTheme } = useTheme();
     const isPositive = item.change >= 0;
-    const color = isPositive ? theme.secondary : theme.danger;
+    const color = isPositive ? colors.secondary : colors.danger;
 
     return (
         <TouchableOpacity
-            style={[styles.container, { borderBottomColor: theme.border }]}
+            style={[styles.container, { borderBottomColor: colors.border }]}
             onPress={onPress}
             activeOpacity={0.7}
         >
             <View style={styles.left}>
-                <View style={[styles.iconBox, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}>
-                    <Text style={[styles.iconText, { color: theme.text }]}>{item.symbol[0]}</Text>
+                <View style={[styles.iconBox, { backgroundColor: currentTheme === 'dark' ? colors.cardBackground : '#FFFFFF', borderColor: colors.border }]}>
+                    <Text style={[styles.iconText, { color: colors.text }]}>{item.symbol[0]}</Text>
                 </View>
                 <View>
-                    <Text style={[styles.symbol, { color: theme.text }]}>{item.symbol}</Text>
-                    <Text style={[styles.name, { color: theme.icon }]}>{item.name}</Text>
+                    <Text style={[styles.symbol, { color: colors.text }]}>{item.symbol}</Text>
+                    <Text style={[styles.name, { color: colors.icon }]}>{item.name}</Text>
                 </View>
             </View>
 
             <View style={styles.right}>
-                <Text style={[styles.price, { color: theme.text }]}>${item.price.toFixed(2)}</Text>
+                <Text style={[styles.price, { color: colors.text }]}>${item.price.toFixed(2)}</Text>
                 <View style={[styles.badge, { backgroundColor: isPositive ? 'rgba(52, 199, 89, 0.1)' : 'rgba(255, 59, 48, 0.1)' }]}>
                     <Text style={[styles.change, { color }]}>
                         {isPositive ? '+' : ''}{item.changePercent.toFixed(2)}%

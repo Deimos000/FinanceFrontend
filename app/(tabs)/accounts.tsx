@@ -529,7 +529,7 @@ export default function AccountsScreen() {
                 </View>
 
                 <ScrollView
-                    contentContainerStyle={{ padding: 18, paddingBottom: 140 }}
+                    contentContainerStyle={{ padding: 18, paddingBottom: 150 }}
                     refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />}
                     showsVerticalScrollIndicator={false}
                 >

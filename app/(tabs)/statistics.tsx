@@ -256,7 +256,7 @@ export default function StatisticsScreen() {
         },
         scrollContent: {
             paddingHorizontal: 20,
-            paddingBottom: 120,
+            paddingBottom: 150,
         },
         card: {
             backgroundColor: theme.cardBackground,

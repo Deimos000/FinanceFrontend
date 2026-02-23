@@ -27,7 +27,7 @@ export default function AnalystRatings({ stock, theme, containerStyle }: Analyst
                     </View>
                 </View>
 
-                <View style={styles.targetGrid}>
+                <View style={[styles.targetGrid, { borderTopColor: theme.border }]}>
                     <View style={styles.targetItem}>
                         <Text style={[styles.targetLabel, { color: theme.icon }]}>Mean Target</Text>
                         <Text style={[styles.targetValue, { color: theme.text }]}>${stock.targetMeanPrice?.toFixed(2)}</Text>
@@ -98,7 +98,6 @@ const styles = StyleSheet.create({
         marginBottom: 16,
         paddingTop: 16,
         borderTopWidth: 1,
-        borderTopColor: 'rgba(255,255,255,0.05)',
     },
     targetItem: {
         flex: 1,

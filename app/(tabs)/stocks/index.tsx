@@ -13,6 +13,7 @@ import { Stock, Sandbox } from './_utils/types';
 import { StockListItem } from './_components/StockListItem';
 import { WatchlistCard } from './_components/WatchlistCard';
 import ShareSandboxModal from './_components/ShareSandboxModal';
+import { useSandboxStore } from './_utils/sandboxStore';
 import { useTheme } from '@/context/ThemeContext';
 import { useIsDesktop } from '@/hooks/useIsDesktop';
 
@@ -22,7 +23,7 @@ export default function StocksOverview() {
     const insets = useSafeAreaInsets();
     const router = useRouter();
     const { watchlist, loadWishlist, loading: wishlistLoading } = useStockStore();
-    const { colors: theme } = useTheme();
+    const { colors, theme } = useTheme();
     const isDesktop = useIsDesktop();
 
     const [query, setQuery] = useState('');
@@ -32,8 +33,7 @@ export default function StocksOverview() {
     const [loading, setLoading] = useState(false);
 
     // Sandbox State
-    const [sandboxes, setSandboxes] = useState<Sandbox[]>([]);
-    const [sharedSandboxes, setSharedSandboxes] = useState<Sandbox[]>([]);
+    const { sandboxes, sharedSandboxes, loadSandboxes } = useSandboxStore();
     const [modalVisible, setModalVisible] = useState(false);
     const [newSandboxName, setNewSandboxName] = useState('');
     const [newSandboxBalance, setNewSandboxBalance] = useState(10000);
@@ -43,19 +43,11 @@ export default function StocksOverview() {
     const [shareTargetSandbox, setShareTargetSandbox] = useState<Sandbox | null>(null);
 
     useEffect(() => {
-        loadSandboxes();
+        if (sandboxes.length === 0 && sharedSandboxes.length === 0) {
+            loadSandboxes();
+        }
         loadMarketMovers();
     }, []);
-
-    const loadSandboxes = async () => {
-        const [data, shared] = await Promise.all([
-            getSandboxes(),
-            getSharedSandboxes()
-        ]);
-        console.log('Sandbox Data:', JSON.stringify(data, null, 2));
-        setSandboxes(data);
-        setSharedSandboxes(shared);
-    };
 
     const loadMarketMovers = async () => {
         const data = await getMarketMovers();
@@ -137,70 +129,70 @@ export default function StocksOverview() {
     // ─── Desktop Layout ───
     if (isDesktop) {
         return (
-            <View style={[styles.container, { paddingTop: 20, backgroundColor: theme.background }]}>
-                <StatusBar barStyle={theme.text === '#FFFFFF' ? "light-content" : "dark-content"} />
+            <View style={[styles.container, { paddingTop: 20, backgroundColor: colors.background }]}>
+                <StatusBar barStyle={theme === 'dark' ? "light-content" : "dark-content"} />
                 <ScrollView contentContainerStyle={{ paddingHorizontal: 32, paddingBottom: 40, maxWidth: 1400, alignSelf: 'center' as any, width: '100%' as any }} showsVerticalScrollIndicator={false}>
 
                     {/* Header */}
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32, marginTop: 10 }}>
-                        <Text style={{ fontSize: 36, fontWeight: '800', color: theme.text }}>Stocks</Text>
-                        <Text style={{ fontSize: 18, fontWeight: '500', color: theme.icon }}>{dateString}</Text>
+                        <Text style={{ fontSize: 36, fontWeight: '800', color: colors.text }}>Stocks</Text>
+                        <Text style={{ fontSize: 18, fontWeight: '500', color: colors.icon }}>{dateString}</Text>
                     </View>
 
                     {/* Centered Search */}
                     <View style={{ alignItems: 'center', marginBottom: 40 }}>
-                        <View style={[styles.searchContainer, { width: '100%', maxWidth: 600, height: 56, borderRadius: 16, backgroundColor: theme.cardBackground, borderWidth: 0, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 3 }]}>
-                            <Ionicons name="search" size={24} color={theme.icon} style={{ marginRight: 12, marginLeft: 8 }} />
+                        <View style={[styles.searchContainer, { width: '100%', maxWidth: 600, height: 56, borderRadius: 16, backgroundColor: colors.cardBackground, borderWidth: 0, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 3 }]}>
+                            <Ionicons name="search" size={24} color={colors.icon} style={{ marginRight: 12, marginLeft: 8 }} />
                             <TextInput
                                 style={[
                                     styles.input,
-                                    { color: theme.text, fontSize: 18 },
+                                    { color: colors.text, fontSize: 18 },
                                     Platform.select({ web: { outlineStyle: 'none' } as any })
                                 ]}
                                 placeholder="Search stocks, ETFs, and more..."
-                                placeholderTextColor={theme.icon}
+                                placeholderTextColor={colors.icon}
                                 value={query}
                                 onChangeText={setQuery}
                             />
-                            {loading && <ActivityIndicator style={{ marginRight: 8 }} color={theme.primary} />}
+                            {loading && <ActivityIndicator style={{ marginRight: 8 }} color={colors.primary} />}
                         </View>
                     </View>
 
                     {/* Search Results (Overlay or replace content) */}
                     {query ? (
                         <View style={{ minHeight: 400 }}>
-                            <Text style={{ fontSize: 24, fontWeight: '700', color: theme.text, marginBottom: 16 }}>Search Results</Text>
+                            <Text style={{ fontSize: 24, fontWeight: '700', color: colors.text, marginBottom: 16 }}>Search Results</Text>
                             {loading ? (
-                                <ActivityIndicator size="large" color={theme.primary} style={{ marginTop: 40 }} />
+                                <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
                             ) : results.length > 0 ? (
                                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 16 }}>
                                     {results.map(item => (
                                         <TouchableOpacity
                                             key={item.symbol}
                                             onPress={() => router.push(`/stocks/${item.symbol}`)}
-                                            style={{ width: '32%', backgroundColor: theme.cardBackground, padding: 16, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
+                                            style={{ width: '32%', backgroundColor: colors.cardBackground, padding: 16, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
                                         >
                                             <View>
-                                                <Text style={{ color: theme.text, fontWeight: 'bold', fontSize: 16 }}>{item.symbol}</Text>
-                                                <Text style={{ color: theme.icon, fontSize: 12 }} numberOfLines={1}>{item.name}</Text>
+                                                <Text style={{ color: colors.text, fontWeight: 'bold', fontSize: 16 }}>{item.symbol}</Text>
+                                                <Text style={{ color: colors.icon, fontSize: 12 }} numberOfLines={1}>{item.name}</Text>
                                             </View>
-                                            <Ionicons name="chevron-forward" size={16} color={theme.icon} />
+                                            <Ionicons name="chevron-forward" size={16} color={colors.icon} />
                                         </TouchableOpacity>
                                     ))}
                                 </View>
                             ) : (
-                                <Text style={{ color: theme.icon, fontSize: 16 }}>No results found.</Text>
+                                <Text style={{ color: colors.icon, fontSize: 16 }}>No results found.</Text>
                             )}
                         </View>
                     ) : (
                         <>
                             {/* Market Movers */}
-                            <View style={{ marginBottom: 40, backgroundColor: '#1A0B2E', borderRadius: 20, padding: 24 }}>
+                            <View style={{ marginBottom: 40, backgroundColor: theme === 'dark' ? '#1A0B2E' : colors.cardBackground, borderRadius: 20, padding: 24, borderWidth: theme === 'light' ? 1 : 0, borderColor: colors.border }}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-                                    <View style={{ padding: 8, borderRadius: 8, backgroundColor: theme.primary + '20' }}>
-                                        <Ionicons name="trending-up" size={20} color={theme.primary} />
+                                    <View style={{ padding: 8, borderRadius: 8, backgroundColor: colors.primary + '20' }}>
+                                        <Ionicons name="trending-up" size={20} color={colors.primary} />
                                     </View>
-                                    <Text style={{ fontSize: 22, fontWeight: '700', color: theme.text }}>Market Movers</Text>
+                                    <Text style={{ fontSize: 22, fontWeight: '700', color: colors.text }}>Market Movers</Text>
                                 </View>
 
                                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 16 }}>
@@ -208,22 +200,22 @@ export default function StocksOverview() {
                                         <TouchableOpacity
                                             key={stock.symbol}
                                             onPress={() => router.push(`/stocks/${stock.symbol}`)}
-                                            style={{ width: 200, height: 120, backgroundColor: '#000000', borderRadius: 16, padding: 16, justifyContent: 'space-between' }}
+                                            style={{ width: 200, height: 120, backgroundColor: theme === 'dark' ? '#000000' : colors.background, borderRadius: 16, padding: 16, justifyContent: 'space-between', borderWidth: theme === 'light' ? 1 : 0, borderColor: colors.border }}
                                         >
                                             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                                <Text style={{ color: theme.text, fontWeight: '700', fontSize: 18 }}>{stock.symbol}</Text>
-                                                <Text style={{ color: stock.changePercent >= 0 ? theme.secondary : theme.danger, fontWeight: '600', fontSize: 16 }}>
+                                                <Text style={{ color: colors.text, fontWeight: '700', fontSize: 18 }}>{stock.symbol}</Text>
+                                                <Text style={{ color: stock.changePercent >= 0 ? colors.secondary : colors.danger, fontWeight: '600', fontSize: 16 }}>
                                                     {stock.changePercent >= 0 ? '+' : ''}{stock.changePercent.toFixed(2)}%
                                                 </Text>
                                             </View>
                                             <View>
-                                                <Text style={{ color: theme.text, fontSize: 22, fontWeight: 'bold' }}>${stock.price.toFixed(2)}</Text>
-                                                <Text style={{ color: theme.icon, fontSize: 12 }} numberOfLines={1}>{stock.name}</Text>
+                                                <Text style={{ color: colors.text, fontSize: 22, fontWeight: 'bold' }}>${stock.price.toFixed(2)}</Text>
+                                                <Text style={{ color: colors.icon, fontSize: 12 }} numberOfLines={1}>{stock.name}</Text>
                                             </View>
                                         </TouchableOpacity>
                                     ))}
                                     {marketMovers.length === 0 && Array(4).fill(0).map((_, i) => (
-                                        <View key={i} style={{ width: 200, height: 120, backgroundColor: '#000000', borderRadius: 16, opacity: 0.5 }} />
+                                        <View key={i} style={{ width: 200, height: 120, backgroundColor: theme === 'dark' ? '#000000' : colors.background, borderRadius: 16, opacity: 0.5, borderWidth: theme === 'light' ? 1 : 0, borderColor: colors.border }} />
                                     ))}
                                 </ScrollView>
                             </View>
@@ -232,15 +224,15 @@ export default function StocksOverview() {
                             <View style={{ flexDirection: 'row', gap: 32, alignItems: 'flex-start' }}>
 
                                 {/* Sandboxes Card */}
-                                <View style={{ flex: 1, backgroundColor: '#1A0B2E', borderRadius: 20, padding: 24, height: 500 }}>
+                                <View style={{ flex: 1, backgroundColor: theme === 'dark' ? '#1A0B2E' : colors.cardBackground, borderRadius: 20, padding: 24, height: 500, borderWidth: theme === 'light' ? 1 : 0, borderColor: colors.border }}>
                                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
                                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                                            <View style={{ padding: 8, borderRadius: 8, backgroundColor: theme.primary + '20' }}>
-                                                <Ionicons name="flask" size={20} color={theme.primary} />
+                                            <View style={{ padding: 8, borderRadius: 8, backgroundColor: colors.primary + '20' }}>
+                                                <Ionicons name="flask" size={20} color={colors.primary} />
                                             </View>
-                                            <Text style={{ fontSize: 22, fontWeight: '700', color: theme.text }}>My Sandboxes</Text>
+                                            <Text style={{ fontSize: 22, fontWeight: '700', color: colors.text }}>My Sandboxes</Text>
                                         </View>
-                                        <TouchableOpacity onPress={() => setModalVisible(true)} style={{ backgroundColor: theme.primary, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 10 }}>
+                                        <TouchableOpacity onPress={() => setModalVisible(true)} style={{ backgroundColor: colors.primary, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 10 }}>
                                             <Text style={{ color: '#FFF', fontWeight: '600' }}>+ New Sandbox</Text>
                                         </TouchableOpacity>
                                     </View>
@@ -248,8 +240,8 @@ export default function StocksOverview() {
                                     <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} nestedScrollEnabled={true}>
                                         {sandboxes.length === 0 ? (
                                             <View style={{ padding: 40, alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-                                                <Ionicons name="flask-outline" size={48} color={theme.icon} style={{ opacity: 0.5 }} />
-                                                <Text style={{ color: theme.icon, marginTop: 16, fontSize: 16 }}>Simulate trades without risk.</Text>
+                                                <Ionicons name="flask-outline" size={48} color={colors.icon} style={{ opacity: 0.5 }} />
+                                                <Text style={{ color: colors.icon, marginTop: 16, fontSize: 16 }}>Simulate trades without risk.</Text>
                                             </View>
                                         ) : (
                                             <View style={{ gap: 12, paddingBottom: 20 }}>
@@ -258,21 +250,21 @@ export default function StocksOverview() {
                                                     const isUp = pnl >= 0;
                                                     return (
                                                         <TouchableOpacity key={sb.id} onPress={() => router.push(`/stocks/sandbox/${sb.id}`)} onLongPress={() => handleDeleteSandbox(sb)}
-                                                            style={{ backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                            style={{ backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : colors.background, borderRadius: 12, padding: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: theme === 'dark' ? 0 : 1, borderColor: colors.border }}>
                                                             <View style={{ flex: 1 }}>
-                                                                <Text style={{ color: theme.text, fontWeight: '700', fontSize: 16 }}>{sb.name}</Text>
-                                                                <Text style={{ color: theme.icon, fontSize: 13, marginTop: 4 }}>Equity: ${(sb.total_equity ?? sb.balance).toLocaleString()}</Text>
+                                                                <Text style={{ color: colors.text, fontWeight: '700', fontSize: 16 }}>{sb.name}</Text>
+                                                                <Text style={{ color: colors.icon, fontSize: 13, marginTop: 4 }}>Equity: ${(sb.total_equity ?? sb.balance).toLocaleString()}</Text>
                                                             </View>
                                                             <View style={{ alignItems: 'flex-end', marginRight: 12 }}>
-                                                                <Text style={{ color: isUp ? theme.secondary : theme.danger, fontSize: 16, fontWeight: '700' }}>{isUp ? '+' : ''}{pnlPercent.toFixed(2)}%</Text>
-                                                                <Text style={{ color: isUp ? theme.secondary : theme.danger, fontSize: 12, opacity: 0.8 }}>{isUp ? '+' : ''}{pnl.toFixed(2)}</Text>
+                                                                <Text style={{ color: isUp ? colors.secondary : colors.danger, fontSize: 16, fontWeight: '700' }}>{isUp ? '+' : ''}{pnlPercent.toFixed(2)}%</Text>
+                                                                <Text style={{ color: isUp ? colors.secondary : colors.danger, fontSize: 12, opacity: 0.8 }}>{isUp ? '+' : ''}{pnl.toFixed(2)}</Text>
                                                             </View>
                                                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                                                 <TouchableOpacity onPress={() => handleShareSandbox(sb)} style={{ padding: 8 }}>
-                                                                    <Ionicons name="share-outline" size={20} color={theme.primary} />
+                                                                    <Ionicons name="share-outline" size={20} color={colors.primary} />
                                                                 </TouchableOpacity>
                                                                 <TouchableOpacity onPress={() => handleDeleteSandbox(sb)} style={{ padding: 8 }}>
-                                                                    <Ionicons name="trash-outline" size={20} color={theme.danger} />
+                                                                    <Ionicons name="trash-outline" size={20} color={colors.danger} />
                                                                 </TouchableOpacity>
                                                             </View>
                                                         </TouchableOpacity>
@@ -284,10 +276,10 @@ export default function StocksOverview() {
                                         {/* Shared With Me - inside same card */}
                                         {sharedSandboxes.length > 0 && (
                                             <View style={{ marginTop: 8 }}>
-                                                <View style={{ height: 1, backgroundColor: theme.border, marginBottom: 16, opacity: 0.5 }} />
+                                                <View style={{ height: 1, backgroundColor: colors.border, marginBottom: 16, opacity: 0.5 }} />
                                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                                                     <Ionicons name="people" size={16} color="#FFA500" />
-                                                    <Text style={{ fontSize: 14, fontWeight: '600', color: theme.icon }}>Shared With Me</Text>
+                                                    <Text style={{ fontSize: 14, fontWeight: '600', color: colors.icon }}>Shared With Me</Text>
                                                 </View>
                                                 <View style={{ gap: 12, paddingBottom: 20 }}>
                                                     {sharedSandboxes.map((sb) => {
@@ -295,18 +287,18 @@ export default function StocksOverview() {
                                                         const isUp = pnl >= 0;
                                                         return (
                                                             <TouchableOpacity key={`shared-${sb.id}`} onPress={() => router.push(`/stocks/sandbox/${sb.id}`)}
-                                                                style={{ backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                                style={{ backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : colors.background, borderRadius: 12, padding: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: theme === 'dark' ? 0 : 1, borderColor: colors.border }}>
                                                                 <View style={{ flex: 1 }}>
                                                                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                                                                        <Text style={{ color: theme.text, fontWeight: '700', fontSize: 16 }}>{sb.name}</Text>
-                                                                        <View style={{ backgroundColor: sb.permission === 'edit' ? '#4cd96420' : theme.primary + '20', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
-                                                                            <Text style={{ color: sb.permission === 'edit' ? '#4cd964' : theme.primary, fontSize: 10, fontWeight: '600', textTransform: 'uppercase' }}>{sb.permission}</Text>
+                                                                        <Text style={{ color: colors.text, fontWeight: '700', fontSize: 16 }}>{sb.name}</Text>
+                                                                        <View style={{ backgroundColor: sb.permission === 'edit' ? '#4cd96420' : colors.primary + '20', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
+                                                                            <Text style={{ color: sb.permission === 'edit' ? '#4cd964' : colors.primary, fontSize: 10, fontWeight: '600', textTransform: 'uppercase' }}>{sb.permission}</Text>
                                                                         </View>
                                                                     </View>
-                                                                    <Text style={{ color: theme.icon, fontSize: 12, marginTop: 4 }}>by {sb.owner_username}</Text>
+                                                                    <Text style={{ color: colors.icon, fontSize: 12, marginTop: 4 }}>by {sb.owner_username}</Text>
                                                                 </View>
                                                                 <View style={{ alignItems: 'flex-end' }}>
-                                                                    <Text style={{ color: isUp ? theme.secondary : theme.danger, fontSize: 16, fontWeight: '700' }}>{isUp ? '+' : ''}{pnlPercent.toFixed(2)}%</Text>
+                                                                    <Text style={{ color: isUp ? colors.secondary : colors.danger, fontSize: 16, fontWeight: '700' }}>{isUp ? '+' : ''}{pnlPercent.toFixed(2)}%</Text>
                                                                 </View>
                                                             </TouchableOpacity>
                                                         );
@@ -318,20 +310,20 @@ export default function StocksOverview() {
                                 </View>
 
                                 {/* Watchlist Card */}
-                                <View style={{ flex: 1, backgroundColor: '#1A0B2E', borderRadius: 20, padding: 24, height: 500 }}>
+                                <View style={{ flex: 1, backgroundColor: theme === 'dark' ? '#1A0B2E' : colors.cardBackground, borderRadius: 20, padding: 24, height: 500, borderWidth: theme === 'light' ? 1 : 0, borderColor: colors.border }}>
                                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 20 }}>
                                         <View style={{ padding: 8, borderRadius: 8, backgroundColor: '#FFD70020' }}>
                                             <Ionicons name="star" size={20} color="#FFD700" />
                                         </View>
-                                        <Text style={{ fontSize: 22, fontWeight: '700', color: theme.text }}>My Watchlist</Text>
+                                        <Text style={{ fontSize: 22, fontWeight: '700', color: colors.text }}>My Watchlist</Text>
                                     </View>
 
                                     {wishlistLoading ? (
-                                        <ActivityIndicator color={theme.primary} style={{ marginTop: 40 }} />
+                                        <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} />
                                     ) : watchlistData.length === 0 ? (
                                         <View style={{ padding: 40, alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-                                            <Ionicons name="star-outline" size={48} color={theme.icon} style={{ opacity: 0.5 }} />
-                                            <Text style={{ color: theme.icon, marginTop: 16, fontSize: 16 }}>Your starred stocks will appear here.</Text>
+                                            <Ionicons name="star-outline" size={48} color={colors.icon} style={{ opacity: 0.5 }} />
+                                            <Text style={{ color: colors.icon, marginTop: 16, fontSize: 16 }}>Your starred stocks will appear here.</Text>
                                         </View>
                                     ) : (
                                         <FlatList
@@ -362,22 +354,22 @@ export default function StocksOverview() {
                 {/* Sandbox Create Modal */}
                 <Modal visible={modalVisible} transparent animationType="slide">
                     <View style={styles.modalOverlay}>
-                        <View style={[styles.modalContent, { backgroundColor: theme.cardBackground, maxWidth: 460, alignSelf: 'center' as any, width: '90%' as any }]}>
+                        <View style={[styles.modalContent, { backgroundColor: colors.cardBackground, maxWidth: 460, alignSelf: 'center' as any, width: '90%' as any }]}>
                             <View style={styles.modalHandle} />
                             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                                <Text style={[styles.modalTitle, { color: theme.text }]}>New Sandbox</Text>
-                                <TouchableOpacity onPress={() => setModalVisible(false)}><Ionicons name="close" size={24} color={theme.text} /></TouchableOpacity>
+                                <Text style={[styles.modalTitle, { color: colors.text }]}>New Sandbox</Text>
+                                <TouchableOpacity onPress={() => setModalVisible(false)}><Ionicons name="close" size={24} color={colors.text} /></TouchableOpacity>
                             </View>
-                            <TextInput style={[styles.modalInput, { color: theme.text, backgroundColor: theme.background, borderColor: theme.border }]} placeholder="Sandbox name..." placeholderTextColor={theme.icon} value={newSandboxName} onChangeText={setNewSandboxName} />
-                            <Text style={{ color: theme.icon, marginBottom: 8 }}>Starting balance:</Text>
+                            <TextInput style={[styles.modalInput, { color: colors.text, backgroundColor: colors.background, borderColor: colors.border }]} placeholder="Sandbox name..." placeholderTextColor={colors.icon} value={newSandboxName} onChangeText={setNewSandboxName} />
+                            <Text style={{ color: colors.icon, marginBottom: 8 }}>Starting balance:</Text>
                             <View style={styles.presetGrid}>
                                 {BALANCE_PRESETS.map((amount) => (
-                                    <TouchableOpacity key={amount} onPress={() => setNewSandboxBalance(amount)} style={[styles.presetButton, { backgroundColor: newSandboxBalance === amount ? theme.primary : theme.background, borderColor: theme.border }]}>
-                                        <Text style={{ color: newSandboxBalance === amount ? '#FFF' : theme.text, fontWeight: '600', fontSize: 12 }}>{formatCompactMoney(amount)}</Text>
+                                    <TouchableOpacity key={amount} onPress={() => setNewSandboxBalance(amount)} style={[styles.presetButton, { backgroundColor: newSandboxBalance === amount ? colors.primary : colors.background, borderColor: colors.border }]}>
+                                        <Text style={{ color: newSandboxBalance === amount ? '#FFF' : colors.text, fontWeight: '600', fontSize: 12 }}>{formatCompactMoney(amount)}</Text>
                                     </TouchableOpacity>
                                 ))}
                             </View>
-                            <TouchableOpacity onPress={handleCreateSandbox} style={[styles.modalBtn, { backgroundColor: theme.primary }]}>
+                            <TouchableOpacity onPress={handleCreateSandbox} style={[styles.modalBtn, { backgroundColor: colors.primary }]}>
                                 <Ionicons name="rocket" size={18} color="#FFF" style={{ marginRight: 8 }} />
                                 <Text style={{ color: '#FFF', fontWeight: '600', fontSize: 16 }}>Create Sandbox</Text>
                             </TouchableOpacity>
@@ -398,183 +390,223 @@ export default function StocksOverview() {
         );
     }
 
-    // ─── Mobile Layout (unchanged) ───
+    // ─── Mobile Layout ───
     return (
-        <View style={[styles.container, { paddingTop: insets.top, backgroundColor: theme.background }]}>
-            <StatusBar barStyle={theme.text === '#FFFFFF' ? "light-content" : "dark-content"} />
+        <View style={[styles.container, { paddingTop: insets.top, backgroundColor: colors.background }]}>
+            <StatusBar barStyle={theme === 'dark' ? "light-content" : "dark-content"} />
 
             {/* Header */}
             <View style={[styles.header, { justifyContent: 'flex-end' }]}>
-                <View style={[styles.profileBtn, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}>
-                    <Ionicons name="person" size={20} color={theme.text} />
+                <View style={[styles.profileBtn, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+                    <Ionicons name="person" size={20} color={colors.text} />
                 </View>
             </View>
 
             {/* Search */}
-            <View style={[styles.searchContainer, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}>
-                <Ionicons name="search" size={20} color={theme.icon} />
+            <View style={[styles.searchContainer, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+                <Ionicons name="search" size={20} color={colors.icon} />
                 <TextInput
                     style={[
                         styles.input,
-                        { color: theme.text },
+                        { color: colors.text },
                         Platform.select({ web: { outlineStyle: 'none' } as any })
                     ]}
                     placeholder="Search for symbol or company..."
-                    placeholderTextColor={theme.icon}
+                    placeholderTextColor={colors.icon}
                     value={query}
                     onChangeText={setQuery}
                 />
-                {loading && <ActivityIndicator size="small" color={theme.primary} />}
+                {loading && <ActivityIndicator size="small" color={colors.primary} />}
             </View>
 
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
-                {/* Sandboxes Section - Only show if not searching */}
+                {/* Market Movers Section - TOP */}
+                {!query && (
+                    <View style={styles.section}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                            <View style={{ padding: 6, borderRadius: 8, backgroundColor: colors.primary + '20' }}>
+                                <Ionicons name="trending-up" size={16} color={colors.primary} />
+                            </View>
+                            <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 0 }]}>Market Movers</Text>
+                        </View>
+
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
+                            {marketMovers.map(stock => (
+                                <TouchableOpacity
+                                    key={stock.symbol}
+                                    onPress={() => router.push(`/stocks/${stock.symbol}`)}
+                                    style={{ width: 160, height: 100, backgroundColor: theme === 'dark' ? colors.cardBackground : '#FFFFFF', borderRadius: 14, padding: 14, justifyContent: 'space-between', borderWidth: theme === 'dark' ? 0 : 1, borderColor: colors.border }}
+                                >
+                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                        <Text style={{ color: colors.text, fontWeight: '700', fontSize: 16 }}>{stock.symbol}</Text>
+                                        <Text style={{ color: stock.changePercent >= 0 ? colors.secondary : colors.danger, fontWeight: '600', fontSize: 13 }}>
+                                            {stock.changePercent >= 0 ? '+' : ''}{stock.changePercent.toFixed(2)}%
+                                        </Text>
+                                    </View>
+                                    <View>
+                                        <Text style={{ color: colors.text, fontSize: 18, fontWeight: 'bold' }}>${stock.price.toFixed(2)}</Text>
+                                        <Text style={{ color: colors.icon, fontSize: 10 }} numberOfLines={1}>{stock.name}</Text>
+                                    </View>
+                                </TouchableOpacity>
+                            ))}
+                            {marketMovers.length === 0 && Array(4).fill(0).map((_, i) => (
+                                <View key={i} style={{ width: 160, height: 100, backgroundColor: colors.cardBackground, borderRadius: 14, opacity: 0.4 }} />
+                            ))}
+                        </ScrollView>
+                    </View>
+                )}
+
+                {/* Sandboxes Section - Row-based single column */}
                 {!query && (
                     <View style={styles.section}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                            <Text style={[styles.sectionTitle, { color: theme.text, marginBottom: 0 }]}>My Sandboxes</Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                                <View style={{ padding: 6, borderRadius: 8, backgroundColor: colors.primary + '20' }}>
+                                    <Ionicons name="flask" size={16} color={colors.primary} />
+                                </View>
+                                <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 0 }]}>My Sandboxes</Text>
+                            </View>
                             <TouchableOpacity onPress={() => setModalVisible(true)}>
-                                <Ionicons name="add-circle" size={24} color={theme.primary} />
+                                <Ionicons name="add-circle" size={24} color={colors.primary} />
                             </TouchableOpacity>
                         </View>
 
                         {sandboxes.length === 0 ? (
                             <TouchableOpacity
-                                style={[styles.emptySandboxCard, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}
+                                style={[styles.emptySandboxCard, { backgroundColor: theme === 'dark' ? colors.cardBackground : '#FFFFFF', borderColor: colors.border }]}
                                 onPress={() => setModalVisible(true)}
                             >
-                                <Ionicons name="flask-outline" size={32} color={theme.primary} />
-                                <Text style={{ color: theme.text, fontWeight: '600', marginTop: 8 }}>Create Your First Sandbox</Text>
-                                <Text style={{ color: theme.icon, fontSize: 12, marginTop: 4 }}>Practice trading with virtual money</Text>
+                                <Ionicons name="flask-outline" size={32} color={colors.primary} />
+                                <Text style={{ color: colors.text, fontWeight: '600', marginTop: 8 }}>Create Your First Sandbox</Text>
+                                <Text style={{ color: colors.icon, fontSize: 12, marginTop: 4 }}>Practice trading with virtual money</Text>
                             </TouchableOpacity>
                         ) : (
-                            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                            <View style={{ gap: 10 }}>
                                 {sandboxes.map(sandbox => {
                                     const { pnl, pnlPercent } = getSandboxPnL(sandbox);
                                     const isPnlPositive = pnl >= 0;
                                     return (
                                         <TouchableOpacity
                                             key={sandbox.id}
-                                            style={[styles.sandboxCard, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}
+                                            style={{ backgroundColor: theme === 'dark' ? colors.cardBackground : '#FFFFFF', borderRadius: 14, padding: 14, flexDirection: 'row', alignItems: 'center', borderWidth: theme === 'dark' ? 0 : 1, borderColor: colors.border }}
                                             onPress={() => router.push({ pathname: `/stocks/sandbox/[id]`, params: { id: sandbox.id, name: sandbox.name } })}
                                             onLongPress={() => handleDeleteSandbox(sandbox)}
                                         >
-                                            <View style={styles.sandboxCardHeader}>
-                                                <View style={[styles.sandboxIconBadge, { backgroundColor: theme.primary + '20' }]}>
-                                                    <Ionicons name="flask" size={16} color={theme.primary} />
-                                                </View>
-                                                <Text style={[styles.sandboxName, { color: theme.text }]} numberOfLines={1}>{sandbox.name}</Text>
-                                                <TouchableOpacity onPress={() => handleShareSandbox(sandbox)} style={{ padding: 4 }}>
-                                                    <Ionicons name="share-outline" size={16} color={theme.primary} />
-                                                </TouchableOpacity>
-                                                <TouchableOpacity onPress={() => handleDeleteSandbox(sandbox)} style={{ padding: 4 }}>
-                                                    <Ionicons name="trash-outline" size={16} color={theme.danger} />
-                                                </TouchableOpacity>
+                                            <View style={[styles.sandboxIconBadge, { backgroundColor: colors.primary + '20' }]}>
+                                                <Ionicons name="flask" size={14} color={colors.primary} />
                                             </View>
-                                            <Text style={[styles.sandboxBalance, { color: theme.text }]}>
-                                                {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(sandbox.total_equity ?? sandbox.balance)}
-                                            </Text>
-                                            <View style={[styles.pnlBadge, { backgroundColor: isPnlPositive ? theme.secondary + '18' : theme.danger + '18' }]}>
-                                                <Ionicons name={isPnlPositive ? "trending-up" : "trending-down"} size={12} color={isPnlPositive ? theme.secondary : theme.danger} />
-                                                <Text style={{ color: isPnlPositive ? theme.secondary : theme.danger, fontSize: 12, fontWeight: '600', marginLeft: 4 }}>
+                                            <View style={{ flex: 1, marginLeft: 10 }}>
+                                                <Text style={{ color: colors.text, fontWeight: '700', fontSize: 15 }} numberOfLines={1}>{sandbox.name}</Text>
+                                                <Text style={{ color: colors.icon, fontSize: 12, marginTop: 2 }}>
+                                                    {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(sandbox.total_equity ?? sandbox.balance)}
+                                                </Text>
+                                            </View>
+                                            <View style={{ alignItems: 'flex-end', marginRight: 8 }}>
+                                                <Text style={{ color: isPnlPositive ? colors.secondary : colors.danger, fontSize: 14, fontWeight: '700' }}>
                                                     {isPnlPositive ? '+' : ''}{pnlPercent.toFixed(1)}%
                                                 </Text>
+                                            </View>
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                                                <TouchableOpacity onPress={() => handleShareSandbox(sandbox)} style={{ padding: 4 }}>
+                                                    <Ionicons name="share-outline" size={16} color={colors.primary} />
+                                                </TouchableOpacity>
+                                                <TouchableOpacity onPress={() => handleDeleteSandbox(sandbox)} style={{ padding: 4 }}>
+                                                    <Ionicons name="trash-outline" size={16} color={colors.danger} />
+                                                </TouchableOpacity>
                                             </View>
                                         </TouchableOpacity>
                                     );
                                 })}
-                            </ScrollView>
+                            </View>
                         )}
 
-                        {/* Shared With Me - inside same section */}
+                        {/* Shared With Me */}
                         {sharedSandboxes.length > 0 && (
-                            <View style={{ marginTop: 16 }}>
+                            <View style={{ marginTop: 14 }}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10, gap: 6 }}>
                                     <Ionicons name="people" size={16} color="#FFA500" />
-                                    <Text style={{ fontSize: 14, fontWeight: '600', color: theme.icon }}>Shared With Me</Text>
+                                    <Text style={{ fontSize: 14, fontWeight: '600', color: colors.icon }}>Shared With Me</Text>
                                 </View>
-                                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                                <View style={{ gap: 10 }}>
                                     {sharedSandboxes.map(sandbox => {
                                         const { pnl, pnlPercent } = getSandboxPnL(sandbox);
                                         const isPnlPositive = pnl >= 0;
                                         return (
                                             <TouchableOpacity
                                                 key={`shared-${sandbox.id}`}
-                                                style={[styles.sandboxCard, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}
+                                                style={{ backgroundColor: theme === 'dark' ? colors.cardBackground : '#FFFFFF', borderRadius: 14, padding: 14, flexDirection: 'row', alignItems: 'center', borderWidth: theme === 'dark' ? 0 : 1, borderColor: colors.border }}
                                                 onPress={() => router.push({ pathname: `/stocks/sandbox/[id]`, params: { id: sandbox.id, name: sandbox.name } })}
                                             >
-                                                <View style={styles.sandboxCardHeader}>
-                                                    <View style={[styles.sandboxIconBadge, { backgroundColor: '#FFA50020' }]}>
-                                                        <Ionicons name="people" size={14} color="#FFA500" />
-                                                    </View>
-                                                    <Text style={[styles.sandboxName, { color: theme.text }]} numberOfLines={1}>{sandbox.name}</Text>
+                                                <View style={[styles.sandboxIconBadge, { backgroundColor: '#FFA50020' }]}>
+                                                    <Ionicons name="people" size={14} color="#FFA500" />
                                                 </View>
-                                                <Text style={{ color: theme.icon, fontSize: 11, marginBottom: 4 }}>by {sandbox.owner_username}</Text>
-                                                <Text style={[styles.sandboxBalance, { color: theme.text, fontSize: 18 }]}>
-                                                    {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(sandbox.total_equity ?? sandbox.balance)}
-                                                </Text>
-                                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                                                    <View style={[styles.pnlBadge, { backgroundColor: isPnlPositive ? theme.secondary + '18' : theme.danger + '18' }]}>
-                                                        <Text style={{ color: isPnlPositive ? theme.secondary : theme.danger, fontSize: 11, fontWeight: '600' }}>
-                                                            {isPnlPositive ? '+' : ''}{pnlPercent.toFixed(1)}%
-                                                        </Text>
-                                                    </View>
-                                                    <View style={{ backgroundColor: sandbox.permission === 'edit' ? '#4cd96420' : theme.primary + '20', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
-                                                        <Text style={{ color: sandbox.permission === 'edit' ? '#4cd964' : theme.primary, fontSize: 10, fontWeight: '600', textTransform: 'uppercase' }}>{sandbox.permission}</Text>
+                                                <View style={{ flex: 1, marginLeft: 10 }}>
+                                                    <Text style={{ color: colors.text, fontWeight: '700', fontSize: 15 }} numberOfLines={1}>{sandbox.name}</Text>
+                                                    <Text style={{ color: colors.icon, fontSize: 11, marginTop: 2 }}>by {sandbox.owner_username}</Text>
+                                                </View>
+                                                <View style={{ alignItems: 'flex-end', marginRight: 8 }}>
+                                                    <Text style={{ color: isPnlPositive ? colors.secondary : colors.danger, fontSize: 14, fontWeight: '700' }}>
+                                                        {isPnlPositive ? '+' : ''}{pnlPercent.toFixed(1)}%
+                                                    </Text>
+                                                    <View style={{ backgroundColor: sandbox.permission === 'edit' ? '#4cd96420' : colors.primary + '20', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 6, marginTop: 2 }}>
+                                                        <Text style={{ color: sandbox.permission === 'edit' ? '#4cd964' : colors.primary, fontSize: 9, fontWeight: '600', textTransform: 'uppercase' }}>{sandbox.permission}</Text>
                                                     </View>
                                                 </View>
                                             </TouchableOpacity>
                                         );
                                     })}
-                                </ScrollView>
+                                </View>
                             </View>
                         )}
                     </View>
                 )}
 
-
-
-                {/* Watchlist Section */}
+                {/* Watchlist Section - single column, no chart */}
                 {watchlistData.length > 0 && !query && (
                     <View style={styles.section}>
-                        <Text style={[styles.sectionTitle, { color: theme.text }]}>My Watchlist</Text>
-                        <FlatList
-                            key={'mobile-watchlist-2'}
-                            data={watchlistData}
-                            keyExtractor={item => item.symbol}
-                            numColumns={2}
-                            scrollEnabled={false}
-                            renderItem={({ item }) => (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                            <View style={{ padding: 6, borderRadius: 8, backgroundColor: '#FFD70020' }}>
+                                <Ionicons name="star" size={16} color="#FFD700" />
+                            </View>
+                            <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 0 }]}>My Watchlist</Text>
+                        </View>
+                        <View style={{ gap: 10 }}>
+                            {watchlistData.map(item => (
                                 <WatchlistCard
+                                    key={item.symbol}
                                     item={item}
                                     onPress={() => router.push(`/stocks/${item.symbol}`)}
-                                    style={{ width: '48%' }}
+                                    hideChart
+                                    style={{ width: '100%', marginBottom: 0 }}
                                 />
-                            )}
-                            columnWrapperStyle={{ justifyContent: 'space-between', marginBottom: 16 }}
-                        />
+                            ))}
+                        </View>
                     </View>
                 )}
 
-                {/* Market List */}
-                <View style={[styles.section, { flex: 1 }]}>
-                    <Text style={[styles.sectionTitle, { color: theme.text }]}>{query ? 'Results' : 'Market Movers'}</Text>
+                {/* Search Results - only when searching */}
+                {query && (
+                    <View style={[styles.section, { flex: 1 }]}>
+                        <Text style={[styles.sectionTitle, { color: colors.text }]}>Results</Text>
 
-                    {results.map(item => (
-                        <StockListItem
-                            key={item.symbol}
-                            item={item}
-                            onPress={() => router.push(`/stocks/${item.symbol}`)}
-                        />
-                    ))}
-
-                    {results.length === 0 && !loading && (
-                        <Text style={{ color: theme.icon, textAlign: 'center', marginTop: 20 }}>
-                            No stocks found.
-                        </Text>
-                    )}
-                </View>
+                        {loading ? (
+                            <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 20 }} />
+                        ) : results.length > 0 ? (
+                            results.map(item => (
+                                <StockListItem
+                                    key={item.symbol}
+                                    item={item}
+                                    onPress={() => router.push(`/stocks/${item.symbol}`)}
+                                />
+                            ))
+                        ) : (
+                            <Text style={{ color: colors.icon, textAlign: 'center', marginTop: 20 }}>
+                                No stocks found.
+                            </Text>
+                        )}
+                    </View>
+                )}
 
             </ScrollView>
 
@@ -586,20 +618,20 @@ export default function StocksOverview() {
                 onRequestClose={() => setModalVisible(false)}
             >
                 <View style={styles.modalOverlay}>
-                    <View style={[styles.modalContent, { backgroundColor: theme.cardBackground }]}>
+                    <View style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>
                         <View style={styles.modalHandle} />
-                        <Text style={[styles.modalTitle, { color: theme.text }]}>New Sandbox</Text>
-                        <Text style={[styles.modalSubtitle, { color: theme.icon }]}>Practice trading with virtual money — no risk!</Text>
+                        <Text style={[styles.modalTitle, { color: colors.text }]}>New Sandbox</Text>
+                        <Text style={[styles.modalSubtitle, { color: colors.icon }]}>Practice trading with virtual money — no risk!</Text>
 
                         <TextInput
-                            style={[styles.modalInput, { color: theme.text, backgroundColor: theme.background, borderColor: theme.border }]}
+                            style={[styles.modalInput, { color: colors.text, backgroundColor: colors.background, borderColor: colors.border }]}
                             placeholder="Sandbox Name"
-                            placeholderTextColor={theme.icon}
+                            placeholderTextColor={colors.icon}
                             value={newSandboxName}
                             onChangeText={setNewSandboxName}
                         />
 
-                        <Text style={[styles.fieldLabel, { color: theme.text }]}>Starting Cash</Text>
+                        <Text style={[styles.fieldLabel, { color: colors.text }]}>Starting Cash</Text>
                         <View style={styles.presetGrid}>
                             {BALANCE_PRESETS.map(amount => (
                                 <TouchableOpacity
@@ -607,14 +639,14 @@ export default function StocksOverview() {
                                     style={[
                                         styles.presetButton,
                                         {
-                                            backgroundColor: newSandboxBalance === amount ? theme.primary : theme.background,
-                                            borderColor: newSandboxBalance === amount ? theme.primary : theme.border,
+                                            backgroundColor: newSandboxBalance === amount ? colors.primary : colors.background,
+                                            borderColor: newSandboxBalance === amount ? colors.primary : colors.border,
                                         }
                                     ]}
                                     onPress={() => setNewSandboxBalance(amount)}
                                 >
                                     <Text style={{
-                                        color: newSandboxBalance === amount ? '#FFFFFF' : theme.text,
+                                        color: newSandboxBalance === amount ? '#FFFFFF' : colors.text,
                                         fontWeight: '600',
                                         fontSize: 14,
                                     }}>
@@ -625,12 +657,12 @@ export default function StocksOverview() {
                         </View>
 
                         <View style={styles.modalButtons}>
-                            <TouchableOpacity onPress={() => setModalVisible(false)} style={[styles.modalBtn, { backgroundColor: theme.background }]}>
-                                <Text style={{ color: theme.text, fontWeight: '600' }}>Cancel</Text>
+                            <TouchableOpacity onPress={() => setModalVisible(false)} style={[styles.modalBtn, { backgroundColor: colors.background }]}>
+                                <Text style={{ color: colors.text, fontWeight: '600' }}>Cancel</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 onPress={handleCreateSandbox}
-                                style={[styles.modalBtn, { backgroundColor: theme.primary, flex: 2 }]}
+                                style={[styles.modalBtn, { backgroundColor: colors.primary, flex: 2 }]}
                             >
                                 <Ionicons name="flask" size={18} color="white" style={{ marginRight: 6 }} />
                                 <Text style={{ color: 'white', fontWeight: 'bold' }}>Create Sandbox</Text>
@@ -697,7 +729,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
     scrollContent: {
-        paddingBottom: 40,
+        paddingBottom: 150,
     },
     section: {
         marginBottom: 24,

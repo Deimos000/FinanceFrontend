@@ -1,10 +1,10 @@
+/**
+ * Stock-specific theme values.
+ * Merges the app's active color scheme with stock-specific overrides.
+ * 
+ * Components should prefer `useTheme().colors` directly.
+ * This is only used in the stocks _layout for the Stack navigator.
+ */
 export const STOCK_THEME = {
     background: 'transparent',
-    card: '#1c1c1e', // iOS dark card
-    text: '#FFFFFF',
-    textSecondary: '#8e8e93',
-    accent: '#4B0082', // Persian Indigo
-    success: '#32d74b',
-    danger: '#ff453a',
-    border: '#2c2c2e',
 };
