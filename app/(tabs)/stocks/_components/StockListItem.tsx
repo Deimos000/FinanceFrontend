@@ -6,7 +6,7 @@ import { useTheme } from '@/context/ThemeContext';
 export const StockListItem = ({ item, onPress }: { item: Stock; onPress: () => void }) => {
     const { colors, theme: currentTheme } = useTheme();
     const isPositive = item.change >= 0;
-    const color = isPositive ? colors.secondary : colors.danger;
+    const color = isPositive ? colors.success : colors.danger;
 
     return (
         <TouchableOpacity

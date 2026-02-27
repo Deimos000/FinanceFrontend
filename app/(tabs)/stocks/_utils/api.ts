@@ -111,9 +111,6 @@ const mapChartDataToStock = (symbol: string, data: any): Stock | null => {
 
 // --- API Functions ---
 
-/**
- * Search for stocks (Global support)
- */
 export const searchStocks = async (query: string): Promise<Stock[]> => {
     if (!query) return [];
 
@@ -122,16 +119,38 @@ export const searchStocks = async (query: string): Promise<Stock[]> => {
         const data = await api(`/api/yahoo-proxy?type=search&query=${encodeURIComponent(query)}`);
 
         if (data.quotes && Array.isArray(data.quotes)) {
-            return data.quotes
+            const results = data.quotes
                 .filter((q: any) => q.quoteType === 'EQUITY' || q.quoteType === 'ETF')
                 .map((q: any) => ({
                     symbol: q.symbol,
                     name: q.shortname || q.longname || q.symbol,
-                    price: 0, // Search returns partial data
+                    price: 0, // Fallback price
                     change: 0,
                     changePercent: 0,
                     history: []
                 }));
+
+            if (results.length > 0) {
+                const symbols = results.map((r: any) => r.symbol).join(',');
+                try {
+                    const quotesData = await api(`/api/yahoo-proxy?type=quotes&symbols=${encodeURIComponent(symbols)}`);
+                    if (quotesData.quotes && Array.isArray(quotesData.quotes)) {
+                        const quoteMap = new Map();
+                        quotesData.quotes.forEach((q: any) => quoteMap.set(q.symbol, q));
+                        for (const r of results) {
+                            const quote = quoteMap.get(r.symbol);
+                            if (quote) {
+                                r.price = quote.price || 0;
+                                r.change = quote.change || 0;
+                                r.changePercent = quote.changePercent || 0;
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.error("Failed to fetch live quotes for search results", e);
+                }
+            }
+            return results;
         }
         return [];
     } catch (e) {

@@ -204,7 +204,7 @@ export default function StocksOverview() {
                                         >
                                             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                                 <Text style={{ color: colors.text, fontWeight: '700', fontSize: 18 }}>{stock.symbol}</Text>
-                                                <Text style={{ color: stock.changePercent >= 0 ? colors.secondary : colors.danger, fontWeight: '600', fontSize: 16 }}>
+                                                <Text style={{ color: stock.changePercent >= 0 ? colors.success : colors.danger, fontWeight: '600', fontSize: 16 }}>
                                                     {stock.changePercent >= 0 ? '+' : ''}{stock.changePercent.toFixed(2)}%
                                                 </Text>
                                             </View>
@@ -256,8 +256,8 @@ export default function StocksOverview() {
                                                                 <Text style={{ color: colors.icon, fontSize: 13, marginTop: 4 }}>Equity: ${(sb.total_equity ?? sb.balance).toLocaleString()}</Text>
                                                             </View>
                                                             <View style={{ alignItems: 'flex-end', marginRight: 12 }}>
-                                                                <Text style={{ color: isUp ? colors.secondary : colors.danger, fontSize: 16, fontWeight: '700' }}>{isUp ? '+' : ''}{pnlPercent.toFixed(2)}%</Text>
-                                                                <Text style={{ color: isUp ? colors.secondary : colors.danger, fontSize: 12, opacity: 0.8 }}>{isUp ? '+' : ''}{pnl.toFixed(2)}</Text>
+                                                                <Text style={{ color: isUp ? colors.success : colors.danger, fontSize: 16, fontWeight: '700' }}>{isUp ? '+' : ''}{pnlPercent.toFixed(2)}%</Text>
+                                                                <Text style={{ color: isUp ? colors.success : colors.danger, fontSize: 12, opacity: 0.8 }}>{isUp ? '+' : ''}{pnl.toFixed(2)}</Text>
                                                             </View>
                                                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                                                 <TouchableOpacity onPress={() => handleShareSandbox(sb)} style={{ padding: 8 }}>
@@ -298,7 +298,7 @@ export default function StocksOverview() {
                                                                     <Text style={{ color: colors.icon, fontSize: 12, marginTop: 4 }}>by {sb.owner_username}</Text>
                                                                 </View>
                                                                 <View style={{ alignItems: 'flex-end' }}>
-                                                                    <Text style={{ color: isUp ? colors.secondary : colors.danger, fontSize: 16, fontWeight: '700' }}>{isUp ? '+' : ''}{pnlPercent.toFixed(2)}%</Text>
+                                                                    <Text style={{ color: isUp ? colors.success : colors.danger, fontSize: 16, fontWeight: '700' }}>{isUp ? '+' : ''}{pnlPercent.toFixed(2)}%</Text>
                                                                 </View>
                                                             </TouchableOpacity>
                                                         );
@@ -440,7 +440,7 @@ export default function StocksOverview() {
                                 >
                                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                         <Text style={{ color: colors.text, fontWeight: '700', fontSize: 16 }}>{stock.symbol}</Text>
-                                        <Text style={{ color: stock.changePercent >= 0 ? colors.secondary : colors.danger, fontWeight: '600', fontSize: 13 }}>
+                                        <Text style={{ color: stock.changePercent >= 0 ? colors.success : colors.danger, fontWeight: '600', fontSize: 13 }}>
                                             {stock.changePercent >= 0 ? '+' : ''}{stock.changePercent.toFixed(2)}%
                                         </Text>
                                     </View>
@@ -503,7 +503,7 @@ export default function StocksOverview() {
                                                 </Text>
                                             </View>
                                             <View style={{ alignItems: 'flex-end', marginRight: 8 }}>
-                                                <Text style={{ color: isPnlPositive ? colors.secondary : colors.danger, fontSize: 14, fontWeight: '700' }}>
+                                                <Text style={{ color: isPnlPositive ? colors.success : colors.danger, fontSize: 14, fontWeight: '700' }}>
                                                     {isPnlPositive ? '+' : ''}{pnlPercent.toFixed(1)}%
                                                 </Text>
                                             </View>
@@ -546,7 +546,7 @@ export default function StocksOverview() {
                                                     <Text style={{ color: colors.icon, fontSize: 11, marginTop: 2 }}>by {sandbox.owner_username}</Text>
                                                 </View>
                                                 <View style={{ alignItems: 'flex-end', marginRight: 8 }}>
-                                                    <Text style={{ color: isPnlPositive ? colors.secondary : colors.danger, fontSize: 14, fontWeight: '700' }}>
+                                                    <Text style={{ color: isPnlPositive ? colors.success : colors.danger, fontSize: 14, fontWeight: '700' }}>
                                                         {isPnlPositive ? '+' : ''}{pnlPercent.toFixed(1)}%
                                                     </Text>
                                                     <View style={{ backgroundColor: sandbox.permission === 'edit' ? '#4cd96420' : colors.primary + '20', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 6, marginTop: 2 }}>

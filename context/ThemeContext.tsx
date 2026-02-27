@@ -9,6 +9,7 @@ import {
     BackgroundStyle,
     BACKGROUND_OPTIONS,
 } from '../constants/colorSchemes';
+import { fetchSettings, updateSettings } from '../utils/api';
 
 type Theme = 'light' | 'dark';
 
@@ -37,16 +38,14 @@ const COLOR_SCHEME_STORAGE_KEY = 'finance_app_color_scheme';
 const BACKGROUND_STYLE_STORAGE_KEY = 'finance_app_background_style';
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-    // Default to 'dark' to prevent unexpected flashes to white when native autofill or
-    // keyboard events cause `useColorScheme()` to emit light mode on some devices.
     const [theme, setThemeState] = useState<Theme>('dark');
     const [schemeId, setSchemeId] = useState<string>(DEFAULT_SCHEME_ID);
     const [backgroundStyle, setBackgroundStyleState] = useState<BackgroundStyle>('pitch');
 
     useEffect(() => {
-        // Load persisted theme + color scheme
         const loadPrefs = async () => {
             try {
+                // Step 1: load from AsyncStorage for instant (no-flicker) startup
                 const [storedTheme, storedScheme, storedBgStyle] = await Promise.all([
                     AsyncStorage.getItem(THEME_STORAGE_KEY),
                     AsyncStorage.getItem(COLOR_SCHEME_STORAGE_KEY),
@@ -55,8 +54,25 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
                 if (storedTheme) setThemeState(storedTheme as Theme);
                 if (storedScheme) setSchemeId(storedScheme);
                 if (storedBgStyle) setBackgroundStyleState(storedBgStyle as BackgroundStyle);
+
+                // Step 2: fetch from DB — server is the source of truth
+                const serverPrefs = await fetchSettings();
+                if (serverPrefs.theme) {
+                    const t = serverPrefs.theme as Theme;
+                    setThemeState(t);
+                    AsyncStorage.setItem(THEME_STORAGE_KEY, t).catch(() => { });
+                }
+                if (serverPrefs.color_scheme_id) {
+                    setSchemeId(serverPrefs.color_scheme_id);
+                    AsyncStorage.setItem(COLOR_SCHEME_STORAGE_KEY, serverPrefs.color_scheme_id).catch(() => { });
+                }
+                if (serverPrefs.background_style) {
+                    setBackgroundStyleState(serverPrefs.background_style as BackgroundStyle);
+                    AsyncStorage.setItem(BACKGROUND_STYLE_STORAGE_KEY, serverPrefs.background_style).catch(() => { });
+                }
             } catch (error) {
-                console.error('Failed to load theme preferences:', error);
+                // Not logged in yet or network error — AsyncStorage values are fine
+                console.warn('Theme: could not load server prefs, using local cache', error);
             }
         };
         loadPrefs();
@@ -64,8 +80,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
     const setTheme = (newTheme: Theme) => {
         setThemeState(newTheme);
-        AsyncStorage.setItem(THEME_STORAGE_KEY, newTheme).catch((err) =>
-            console.error('Failed to save theme:', err)
+        AsyncStorage.setItem(THEME_STORAGE_KEY, newTheme).catch(() => { });
+        updateSettings({ theme: newTheme }).catch((err) =>
+            console.error('Failed to save theme to DB:', err)
         );
     };
 
@@ -75,15 +92,17 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
     const setColorScheme = (id: string) => {
         setSchemeId(id);
-        AsyncStorage.setItem(COLOR_SCHEME_STORAGE_KEY, id).catch((err) =>
-            console.error('Failed to save color scheme:', err)
+        AsyncStorage.setItem(COLOR_SCHEME_STORAGE_KEY, id).catch(() => { });
+        updateSettings({ color_scheme_id: id }).catch((err) =>
+            console.error('Failed to save color scheme to DB:', err)
         );
     };
 
     const setBackgroundStyle = (style: BackgroundStyle) => {
         setBackgroundStyleState(style);
-        AsyncStorage.setItem(BACKGROUND_STYLE_STORAGE_KEY, style).catch((err) =>
-            console.error('Failed to save background style:', err)
+        AsyncStorage.setItem(BACKGROUND_STYLE_STORAGE_KEY, style).catch(() => { });
+        updateSettings({ background_style: style }).catch((err) =>
+            console.error('Failed to save background style to DB:', err)
         );
     };
 

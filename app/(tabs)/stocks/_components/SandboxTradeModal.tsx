@@ -219,6 +219,149 @@ export const SandboxTradeModal = ({ sandboxId, availableCash, onClose, onSuccess
         );
     };
 
+    const renderTradeControls = () => (
+        <View>
+            {/* Buy/Sell Toggles */}
+            <View style={[styles.toggleContainer, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}>
+                <TouchableOpacity
+                    style={[styles.toggleBtn, tradeType === 'BUY' && { backgroundColor: theme.primary }]}
+                    onPress={() => { setTradeType('BUY'); setAmount(''); }}
+                >
+                    <Text style={[styles.toggleText, { color: tradeType === 'BUY' ? '#fff' : theme.text }]}>Buy</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[styles.toggleBtn, tradeType === 'SELL' && { backgroundColor: theme.danger }]}
+                    onPress={() => { setTradeType('SELL'); setAmount(''); }}
+                >
+                    <Text style={[styles.toggleText, { color: tradeType === 'SELL' ? '#fff' : theme.text }]}>Sell</Text>
+                </TouchableOpacity>
+            </View>
+
+            {/* Mode Toggles */}
+            <View style={{ flexDirection: 'row', backgroundColor: currentTheme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', borderRadius: 12, padding: 4, marginBottom: 24 }}>
+                <TouchableOpacity
+                    style={{ flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 8, backgroundColor: mode === 'DOLLARS' ? theme.primary : 'transparent' }}
+                    onPress={() => { setMode('DOLLARS'); setAmount(''); }}
+                >
+                    <Text style={{ color: mode === 'DOLLARS' ? '#fff' : theme.text, fontWeight: 'bold' }}>Dollars ($)</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={{ flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 8, backgroundColor: mode === 'SHARES' ? theme.primary : 'transparent' }}
+                    onPress={() => { setMode('SHARES'); setAmount(''); }}
+                >
+                    <Text style={{ color: mode === 'SHARES' ? '#fff' : theme.text, fontWeight: 'bold' }}>Shares (Qty)</Text>
+                </TouchableOpacity>
+            </View>
+
+            {/* Input Display Area */}
+            <View style={{ backgroundColor: theme.cardBackground, borderRadius: 16, padding: 20, borderWidth: 1, borderColor: theme.border, marginBottom: 20 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                    <TouchableOpacity
+                        onPress={handleDecrement}
+                        style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: currentTheme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.04)', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                        <Ionicons name="remove" size={24} color={theme.text} />
+                    </TouchableOpacity>
+
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flex: 1, paddingHorizontal: 32 }}>
+                        {mode === 'DOLLARS' && <Text style={{ fontSize: 32, color: theme.text, fontWeight: 'bold', marginRight: 4 }}>$</Text>}
+                        <TextInput
+                            style={[
+                                styles.amountInput,
+                                { color: theme.text },
+                                Platform.select({ web: { outlineStyle: 'none' } as any })
+                            ]}
+                            placeholder="0"
+                            placeholderTextColor={theme.icon}
+                            keyboardType="numeric"
+                            value={amount}
+                            onChangeText={handleAmountChange}
+                        />
+                        {mode === 'SHARES' && <Text style={{ fontSize: 24, color: theme.text, fontWeight: 'bold', marginLeft: 8 }}>sh</Text>}
+                    </View>
+
+                    <TouchableOpacity
+                        onPress={handleIncrement}
+                        style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: currentTheme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.04)', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                        <Ionicons name="add" size={24} color={theme.text} />
+                    </TouchableOpacity>
+                </View>
+
+                {((tradeType === 'SELL' && maxSharesSell > 0) || (tradeType === 'BUY' && maxDollarsBuy > 0)) && (
+                    <View style={{ alignItems: 'center', marginTop: 10 }}>
+                        <TouchableOpacity onPress={setMaxAmount} style={{ paddingHorizontal: 12, paddingVertical: 6, backgroundColor: currentTheme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', borderRadius: 12, borderWidth: 1, borderColor: theme.border }}>
+                            <Text style={{ color: theme.secondary, fontSize: 13, fontWeight: '600' }}>
+                                Max Available: {
+                                    tradeType === 'SELL'
+                                        ? (mode === 'DOLLARS' ? `$${maxDollarsSell.toFixed(2)}` : `${maxSharesSell.toFixed(4)} sh`)
+                                        : (mode === 'DOLLARS' ? `$${maxDollarsBuy.toFixed(2)}` : `${maxSharesBuy.toFixed(4)} sh`)
+                                }
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
+
+                {amount && !isNaN(parseFloat(amount)) && selectedStock ? (
+                    <Text style={{ textAlign: 'center', color: theme.secondary, marginTop: 16, fontSize: 15 }}>
+                        {mode === 'DOLLARS'
+                            ? `≈ ${(parseFloat(amount) / selectedStock.price).toFixed(4)} shares`
+                            : `≈ $${(parseFloat(amount) * selectedStock.price).toFixed(2)}`
+                        }
+                    </Text>
+                ) : (
+                    <Text style={{ textAlign: 'center', color: 'transparent', marginTop: 16, fontSize: 15 }}>≈ 0</Text>
+                )}
+            </View>
+
+            <TouchableOpacity
+                style={[styles.executeBtn, { backgroundColor: tradeType === 'BUY' ? theme.primary : theme.danger, opacity: trading ? 0.7 : 1 }]}
+                onPress={handleTrade}
+                disabled={trading}
+            >
+                {trading ? (
+                    <ActivityIndicator color="#fff" />
+                ) : (
+                    <Text style={styles.executeBtnText}>
+                        {tradeType} {selectedStock?.symbol}
+                    </Text>
+                )}
+            </TouchableOpacity>
+        </View>
+    );
+
+    const renderHistory = () => {
+        if (!tradeHistory || tradeHistory.length === 0) return null;
+
+        const formatTxDate = (tx: any) => {
+            const raw = tx.created_at || tx.executed_at;
+            if (!raw) return '—';
+            const d = new Date(raw);
+            if (isNaN(d.getTime())) return '—';
+            return d.toLocaleDateString();
+        };
+
+        return (
+            <View style={{ marginTop: 24 }}>
+                <Text style={{ color: theme.text, fontWeight: 'bold', marginBottom: 12, fontSize: 18 }}>History</Text>
+                {tradeHistory.map(tx => (
+                    <View key={tx.id} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: theme.border }}>
+                        <View>
+                            <Text style={{ color: tx.type === 'BUY' ? theme.primary : theme.danger, fontWeight: 'bold' }}>
+                                {tx.type}
+                            </Text>
+                            <Text style={{ color: theme.secondary, fontSize: 12 }}>{formatTxDate(tx)}</Text>
+                        </View>
+                        <View style={{ alignItems: 'flex-end' }}>
+                            <Text style={{ color: theme.text }}>{Number(tx.quantity).toFixed(4)} sh @ ${Number(tx.price).toFixed(2)}</Text>
+                            <Text style={{ color: theme.secondary }}>Total: ${(Number(tx.quantity) * Number(tx.price)).toFixed(2)}</Text>
+                        </View>
+                    </View>
+                ))}
+            </View>
+        );
+    };
+
     return (
         <View style={isDesktop ? styles.desktopOverlay : { flex: 1, backgroundColor: theme.cardBackground }}>
             <View style={[
@@ -266,157 +409,71 @@ export const SandboxTradeModal = ({ sandboxId, availableCash, onClose, onSuccess
                     </View>
                 ) : (
                     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-                        <ScrollView contentContainerStyle={{ padding: isDesktop ? 32 : 20 }}>
-                            <View style={{ flexDirection: isDesktop ? 'row' : 'column', gap: isDesktop ? 48 : 32 }}>
-                                {/* Left Column (Desktop) / Top Section (Mobile) */}
-                                <View style={{ flex: 1 }}>
-                                    <View style={{ alignItems: 'center', marginBottom: 20 }}>
-                                        <Text style={{ fontSize: 32, fontWeight: 'bold', color: theme.text }}>
-                                            ${selectedStock?.price.toFixed(2)}
-                                        </Text>
-                                        <Text style={{ color: (selectedStock?.changePercent || 0) >= 0 ? theme.success : theme.danger }}>
-                                            {(selectedStock?.changePercent || 0) >= 0 ? '+' : ''}{selectedStock?.changePercent.toFixed(2)}%
-                                        </Text>
-                                    </View>
-
-                                    {renderPositionCard()}
-
-                                    <TouchableOpacity onPress={() => setStep('SEARCH')} style={{ alignItems: 'center', marginTop: 30, marginBottom: 20 }}>
-                                        <Text style={{ color: theme.secondary }}>Back to Search</Text>
-                                    </TouchableOpacity>
-                                </View>
-
-                                {/* Right Column (Desktop) / Bottom Section (Mobile) */}
-                                <View style={{ flex: 1 }}>
-                                    {/* Buy/Sell Toggles */}
-                                    <View style={[styles.toggleContainer, { backgroundColor: theme.cardBackground, borderColor: theme.border, marginTop: isDesktop ? 0 : 20 }]}>
-                                        <TouchableOpacity
-                                            style={[styles.toggleBtn, tradeType === 'BUY' && { backgroundColor: theme.primary }]}
-                                            onPress={() => { setTradeType('BUY'); setAmount(''); }}
-                                        >
-                                            <Text style={[styles.toggleText, { color: tradeType === 'BUY' ? '#fff' : theme.text }]}>Buy</Text>
-                                        </TouchableOpacity>
-                                        <TouchableOpacity
-                                            style={[styles.toggleBtn, tradeType === 'SELL' && { backgroundColor: theme.danger }]}
-                                            onPress={() => { setTradeType('SELL'); setAmount(''); }}
-                                        >
-                                            <Text style={[styles.toggleText, { color: tradeType === 'SELL' ? '#fff' : theme.text }]}>Sell</Text>
-                                        </TouchableOpacity>
-                                    </View>
-
-                                    {/* Mode Toggles */}
-                                    <View style={{ flexDirection: 'row', backgroundColor: currentTheme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', borderRadius: 12, padding: 4, marginBottom: 24 }}>
-                                        <TouchableOpacity
-                                            style={{ flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 8, backgroundColor: mode === 'DOLLARS' ? theme.primary : 'transparent' }}
-                                            onPress={() => { setMode('DOLLARS'); setAmount(''); }}
-                                        >
-                                            <Text style={{ color: mode === 'DOLLARS' ? '#fff' : theme.text, fontWeight: 'bold' }}>Dollars ($)</Text>
-                                        </TouchableOpacity>
-                                        <TouchableOpacity
-                                            style={{ flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 8, backgroundColor: mode === 'SHARES' ? theme.primary : 'transparent' }}
-                                            onPress={() => { setMode('SHARES'); setAmount(''); }}
-                                        >
-                                            <Text style={{ color: mode === 'SHARES' ? '#fff' : theme.text, fontWeight: 'bold' }}>Shares (Qty)</Text>
-                                        </TouchableOpacity>
-                                    </View>
-
-                                    {/* Input Display Area */}
-                                    <View style={{ backgroundColor: theme.cardBackground, borderRadius: 16, padding: 20, borderWidth: 1, borderColor: theme.border, marginBottom: 20 }}>
-
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                                            <TouchableOpacity
-                                                onPress={handleDecrement}
-                                                style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: currentTheme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.04)', alignItems: 'center', justifyContent: 'center' }}
-                                            >
-                                                <Ionicons name="remove" size={24} color={theme.text} />
-                                            </TouchableOpacity>
-
-                                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flex: 1, paddingHorizontal: 32 }}>
-                                                {mode === 'DOLLARS' && <Text style={{ fontSize: 32, color: theme.text, fontWeight: 'bold', marginRight: 4 }}>$</Text>}
-                                                <TextInput
-                                                    style={[
-                                                        styles.amountInput,
-                                                        { color: theme.text },
-                                                        Platform.select({ web: { outlineStyle: 'none' } as any })
-                                                    ]}
-                                                    placeholder="0"
-                                                    placeholderTextColor={theme.icon}
-                                                    keyboardType="numeric"
-                                                    value={amount}
-                                                    onChangeText={handleAmountChange}
-                                                />
-                                                {mode === 'SHARES' && <Text style={{ fontSize: 24, color: theme.text, fontWeight: 'bold', marginLeft: 8 }}>sh</Text>}
-                                            </View>
-
-                                            <TouchableOpacity
-                                                onPress={handleIncrement}
-                                                style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: currentTheme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.04)', alignItems: 'center', justifyContent: 'center' }}
-                                            >
-                                                <Ionicons name="add" size={24} color={theme.text} />
-                                            </TouchableOpacity>
+                        <ScrollView contentContainerStyle={{ padding: isDesktop ? 32 : 16, paddingBottom: 60 }}>
+                            {isDesktop ? (
+                                /* ── Desktop: side-by-side layout ── */
+                                <View style={{ flexDirection: 'row', gap: 48 }}>
+                                    {/* Left Column */}
+                                    <View style={{ flex: 1 }}>
+                                        <View style={{ alignItems: 'center', marginBottom: 20 }}>
+                                            <Text style={{ fontSize: 32, fontWeight: 'bold', color: theme.text }}>
+                                                ${selectedStock?.price.toFixed(2)}
+                                            </Text>
+                                            <Text style={{ color: (selectedStock?.changePercent || 0) >= 0 ? theme.success : theme.danger }}>
+                                                {(selectedStock?.changePercent || 0) >= 0 ? '+' : ''}{selectedStock?.changePercent.toFixed(2)}%
+                                            </Text>
                                         </View>
 
-                                        {((tradeType === 'SELL' && maxSharesSell > 0) || (tradeType === 'BUY' && maxDollarsBuy > 0)) && (
-                                            <View style={{ alignItems: 'center', marginTop: 10 }}>
-                                                <TouchableOpacity onPress={setMaxAmount} style={{ paddingHorizontal: 12, paddingVertical: 6, backgroundColor: currentTheme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', borderRadius: 12, borderWidth: 1, borderColor: theme.border }}>
-                                                    <Text style={{ color: theme.secondary, fontSize: 13, fontWeight: '600' }}>
-                                                        Max Available: {
-                                                            tradeType === 'SELL'
-                                                                ? (mode === 'DOLLARS' ? `$${maxDollarsSell.toFixed(2)}` : `${maxSharesSell.toFixed(4)} sh`)
-                                                                : (mode === 'DOLLARS' ? `$${maxDollarsBuy.toFixed(2)}` : `${maxSharesBuy.toFixed(4)} sh`)
-                                                        }
-                                                    </Text>
-                                                </TouchableOpacity>
-                                            </View>
-                                        )}
+                                        {renderPositionCard()}
 
-                                        {amount && !isNaN(parseFloat(amount)) && selectedStock ? (
-                                            <Text style={{ textAlign: 'center', color: theme.secondary, marginTop: 16, fontSize: 15 }}>
-                                                {mode === 'DOLLARS'
-                                                    ? `≈ ${(parseFloat(amount) / selectedStock.price).toFixed(4)} shares`
-                                                    : `≈ $${(parseFloat(amount) * selectedStock.price).toFixed(2)}`
-                                                }
-                                            </Text>
-                                        ) : (
-                                            <Text style={{ textAlign: 'center', color: 'transparent', marginTop: 16, fontSize: 15 }}>≈ 0</Text>
-                                        )}
+                                        <TouchableOpacity onPress={() => setStep('SEARCH')} style={{ alignItems: 'center', marginTop: 30, marginBottom: 20 }}>
+                                            <Text style={{ color: theme.secondary }}>Back to Search</Text>
+                                        </TouchableOpacity>
                                     </View>
 
-                                    <TouchableOpacity
-                                        style={[styles.executeBtn, { backgroundColor: tradeType === 'BUY' ? theme.primary : theme.danger, opacity: trading ? 0.7 : 1 }]}
-                                        onPress={handleTrade}
-                                        disabled={trading}
-                                    >
-                                        {trading ? (
-                                            <ActivityIndicator color="#fff" />
-                                        ) : (
-                                            <Text style={styles.executeBtnText}>
-                                                {tradeType} {selectedStock?.symbol}
+                                    {/* Right Column */}
+                                    <View style={{ flex: 1 }}>
+                                        {renderTradeControls()}
+                                        {renderHistory()}
+                                    </View>
+                                </View>
+                            ) : (
+                                /* ── Mobile: single-column, trade-first layout ── */
+                                <View>
+                                    {/* Compact stock header */}
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, paddingHorizontal: 4 }}>
+                                        <View>
+                                            <Text style={{ fontSize: 22, fontWeight: '700', color: theme.text }}>
+                                                {selectedStock?.symbol}
                                             </Text>
-                                        )}
-                                    </TouchableOpacity>
+                                            <Text style={{ color: (selectedStock?.changePercent || 0) >= 0 ? theme.success : theme.danger, fontSize: 13, marginTop: 2 }}>
+                                                {(selectedStock?.changePercent || 0) >= 0 ? '+' : ''}{selectedStock?.changePercent?.toFixed(2) ?? '0.00'}%
+                                            </Text>
+                                        </View>
+                                        <View style={{ alignItems: 'flex-end' }}>
+                                            <Text style={{ fontSize: 24, fontWeight: 'bold', color: theme.text }}>
+                                                ${selectedStock?.price?.toFixed(2) ?? '—'}
+                                            </Text>
+                                            <TouchableOpacity onPress={() => setStep('SEARCH')}>
+                                                <Text style={{ color: theme.primary, fontSize: 12, marginTop: 2 }}>Change stock</Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    </View>
 
-                                    {(tradeHistory && tradeHistory.length > 0) && (
-                                        <View style={{ marginTop: 30, flex: 1 }}>
-                                            <Text style={{ color: theme.text, fontWeight: 'bold', marginBottom: 15, fontSize: 18 }}>History</Text>
-                                            {tradeHistory.map(tx => (
-                                                <View key={tx.id} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: theme.border }}>
-                                                    <View>
-                                                        <Text style={{ color: tx.type === 'BUY' ? theme.primary : theme.danger, fontWeight: 'bold' }}>
-                                                            {tx.type}
-                                                        </Text>
-                                                        <Text style={{ color: theme.secondary, fontSize: 12 }}>{new Date(tx.created_at).toLocaleDateString()}</Text>
-                                                    </View>
-                                                    <View style={{ alignItems: 'flex-end' }}>
-                                                        <Text style={{ color: theme.text }}>{Number(tx.quantity).toFixed(4)} sh @ ${Number(tx.price).toFixed(2)}</Text>
-                                                        <Text style={{ color: theme.secondary }}>Total: ${(Number(tx.quantity) * Number(tx.price)).toFixed(2)}</Text>
-                                                    </View>
-                                                </View>
-                                            ))}
+                                    {/* Trade controls */}
+                                    {renderTradeControls()}
+
+                                    {/* Position card */}
+                                    {currentPosition && (
+                                        <View style={{ marginTop: 24 }}>
+                                            {renderPositionCard()}
                                         </View>
                                     )}
+
+                                    {/* History */}
+                                    {renderHistory()}
                                 </View>
-                            </View>
+                            )}
                         </ScrollView>
                     </KeyboardAvoidingView>
                 )}

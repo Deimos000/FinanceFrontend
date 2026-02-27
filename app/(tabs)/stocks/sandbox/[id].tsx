@@ -122,7 +122,7 @@ export default function SandboxDetail() {
     const totalGain = currentEquity - initialBalance;
     const totalGainPercent = initialBalance > 0 ? (totalGain / initialBalance) * 100 : 0;
     const isPositive = totalGain >= 0;
-    const displayColor = isPositive ? colors.secondary : colors.danger;
+    const displayColor = isPositive ? colors.success : colors.danger;
 
     const formatDate = (ts: number | null) => {
         if (!ts) return '';
@@ -204,7 +204,7 @@ export default function SandboxDetail() {
                     {portfolio?.equity_history && portfolio.equity_history.length > 0 ? (
                         <InteractiveChart
                             data={portfolio.equity_history}
-                            color={isPositive ? colors.secondary : colors.danger}
+                            color={isPositive ? colors.success : colors.danger}
                             onScrub={onScrub}
                         />
                     ) : (
@@ -213,6 +213,18 @@ export default function SandboxDetail() {
                         </View>
                     )}
                 </View>
+
+                {/* History Error Banner */}
+                {portfolio?.history_error && (
+                    <View style={{ marginHorizontal: 20, marginBottom: 16, padding: 12, backgroundColor: 'rgba(255, 59, 48, 0.15)', borderRadius: 10, borderWidth: 1, borderColor: 'rgba(255, 59, 48, 0.3)' }}>
+                        <Text style={{ color: colors.danger, fontSize: 13, fontWeight: '600', marginBottom: 4 }}>
+                            ⚠ Chart data may be incomplete
+                        </Text>
+                        <Text style={{ color: colors.secondary, fontSize: 12 }}>
+                            {portfolio.history_error}
+                        </Text>
+                    </View>
+                )}
 
                 {/* Stats Grid */}
                 {portfolio && (
@@ -257,62 +269,38 @@ export default function SandboxDetail() {
                                     style={{
                                         backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
                                         borderRadius: 12,
-                                        padding: 16,
-                                        flexDirection: 'row',
-                                        justifyContent: 'space-between',
-                                        alignItems: 'center'
+                                        padding: 12,
                                     }}
-                                    onPress={() => navigateToDetails(item.symbol)}
+                                    onPress={() => {
+                                        if (canEdit) {
+                                            handleTradeStock(item);
+                                        } else {
+                                            navigateToDetails(item.symbol);
+                                        }
+                                    }}
                                 >
-                                    <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                                        <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.04)', justifyContent: 'center', alignItems: 'center' }}>
-                                            <Text style={{ color: colors.text, fontSize: 18, fontWeight: 'bold' }}>{item.symbol[0]}</Text>
-                                        </View>
+                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <View style={{ flex: 1, paddingRight: 10 }}>
-                                            <Text style={{ color: colors.text, fontSize: 18, fontWeight: '700' }}>{item.symbol}</Text>
-                                            <Text style={{ color: colors.icon, fontSize: 14, marginTop: 2 }} numberOfLines={1}>
-                                                {details?.name || `${item.quantity} shares`}
+                                            <Text style={{ color: colors.text, fontSize: 16, fontWeight: '700' }} numberOfLines={1}>
+                                                {details?.name || item.symbol}
                                             </Text>
-                                            <View style={{ flexDirection: 'row', gap: 10, marginTop: 4 }}>
-                                                <Text style={{ color: colors.icon, fontSize: 12 }}>{item.quantity} shares @ ${item.average_buy_price.toFixed(2)}</Text>
-                                                {details?.peRatio && (
-                                                    <Text style={{ color: colors.secondary, fontSize: 12 }}>P/E: {details.peRatio.toFixed(1)}</Text>
-                                                )}
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
+                                                <Text style={{ color: colors.icon, fontSize: 13, fontWeight: '600' }}>{item.symbol}</Text>
+                                                <Text style={{ color: colors.icon, fontSize: 12 }}>•</Text>
+                                                <Text style={{ color: colors.icon, fontSize: 13 }}>{item.quantity.toFixed(1)} shrs</Text>
+                                                <Text style={{ color: colors.icon, fontSize: 12 }}>•</Text>
+                                                <Text style={{ color: colors.icon, fontSize: 13 }}>${item.current_price.toFixed(2)}</Text>
                                             </View>
                                         </View>
-                                    </View>
 
-                                    <View style={{ alignItems: 'flex-end', flexDirection: 'row', gap: 16 }}>
                                         <View style={{ alignItems: 'flex-end' }}>
-                                            <Text style={{ color: colors.text, fontSize: 18, fontWeight: '700' }}>
+                                            <Text style={{ color: colors.text, fontSize: 16, fontWeight: '700' }}>
                                                 ${item.current_value.toFixed(2)}
                                             </Text>
-                                            <Text style={{ color: isPositive ? colors.secondary : colors.danger, fontSize: 14, fontWeight: '600', marginTop: 2 }}>
+                                            <Text style={{ color: isPositive ? colors.success : colors.danger, fontSize: 13, fontWeight: '600', marginTop: 4 }}>
                                                 {isPositive ? '+' : ''}{item.gain_loss.toFixed(2)} ({item.gain_loss_percent.toFixed(2)}%)
                                             </Text>
                                         </View>
-
-                                        {canEdit && (
-                                            <TouchableOpacity
-                                                onPress={(e) => {
-                                                    e.stopPropagation();
-                                                    handleTradeStock(item);
-                                                }}
-                                                style={{
-                                                    paddingVertical: 10,
-                                                    paddingHorizontal: 20,
-                                                    backgroundColor: colors.primary,
-                                                    borderRadius: 12,
-                                                    shadowColor: colors.primary,
-                                                    shadowOffset: { width: 0, height: 2 },
-                                                    shadowOpacity: 0.3,
-                                                    shadowRadius: 4,
-                                                    elevation: 4
-                                                }}
-                                            >
-                                                <Text style={{ color: '#FFF', fontWeight: '800', fontSize: 15, letterSpacing: 0.5 }}>TRADE</Text>
-                                            </TouchableOpacity>
-                                        )}
                                     </View>
                                 </TouchableOpacity>
                             );

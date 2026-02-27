@@ -11,6 +11,7 @@ import { createHomeStyles } from '@/app/styles/screens/index.styles';
 import { useIsDesktop } from '@/hooks/useIsDesktop';
 import TabScreenWrapper from '@/components/ui/TabScreenWrapper';
 import { useAuth } from '@/context/AuthContext';
+import { useSandboxStore } from '@/app/(tabs)/stocks/_utils/sandboxStore';
 
 // Helper to group transactions by date
 const groupTransactionsByDate = (transactions: Transaction[]) => {
@@ -58,6 +59,12 @@ export default function HomeScreen() {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
+    await useSandboxStore.getState().loadSandboxes();
+    const store = useSandboxStore.getState();
+    await Promise.all([
+      ...store.sandboxes.map(sb => store.loadPortfolio(sb.id)),
+      ...store.sharedSandboxes.map(sb => store.loadPortfolio(sb.id))
+    ]);
     await refreshAccounts();
     setRefreshing(false);
   }, [refreshAccounts]);
@@ -99,9 +106,14 @@ export default function HomeScreen() {
                 <Text style={styles.subtitle}>Welcome back,</Text>
                 <Text style={[styles.title, { fontSize: 36 }]}>{username || 'Guest'}</Text>
               </View>
-              <TouchableOpacity style={styles.profileBtn} onPress={() => router.push('/(tabs)/settings')}>
-                <Ionicons name="person" size={20} color={theme.text} />
-              </TouchableOpacity>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <TouchableOpacity style={[styles.profileBtn, { backgroundColor: theme.cardBackground, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 }]} onPress={onRefresh} disabled={refreshing}>
+                  <Ionicons name="refresh" size={20} color={refreshing ? theme.icon : theme.primary} />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.profileBtn} onPress={() => router.push('/(tabs)/settings')}>
+                  <Ionicons name="person" size={20} color={theme.text} />
+                </TouchableOpacity>
+              </View>
             </View>
 
             {/* Summary Cards Row */}

@@ -142,6 +142,7 @@ export interface SandboxPortfolio {
     initial_balance: number;
     total_equity: number;
     equity_history?: { timestamp: number; value: number }[];
+    history_error?: string;
     permission?: string;
 }
 

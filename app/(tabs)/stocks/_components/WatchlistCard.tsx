@@ -59,7 +59,7 @@ export const WatchlistCard = ({ item, onPress, style, hideChart }: { item: Wishl
     }
 
     const isPositive = stock.change >= 0;
-    const color = isPositive ? colors.secondary : colors.danger;
+    const color = isPositive ? colors.success : colors.danger;
     const historyValues = stock.history?.map(h => h.value) || [];
 
     const dateAdded = item.added_at ? new Date(item.added_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '';
@@ -81,7 +81,7 @@ export const WatchlistCard = ({ item, onPress, style, hideChart }: { item: Wishl
                             {isPositive ? '+' : ''}{stock.changePercent?.toFixed(2)}%
                         </Text>
                         {item.initial_price && (
-                            <Text style={{ fontSize: 10, color: stock.price >= item.initial_price ? colors.secondary : colors.danger, fontWeight: '600' }}>
+                            <Text style={{ fontSize: 10, color: stock.price >= item.initial_price ? colors.success : colors.danger, fontWeight: '600' }}>
                                 {((stock.price - item.initial_price) / item.initial_price * 100).toFixed(1)}%
                             </Text>
                         )}
@@ -122,7 +122,7 @@ export const WatchlistCard = ({ item, onPress, style, hideChart }: { item: Wishl
                     {item.initial_price && (
                         <Text style={{
                             fontSize: 10,
-                            color: stock.price >= item.initial_price ? colors.secondary : colors.danger,
+                            color: stock.price >= item.initial_price ? colors.success : colors.danger,
                             fontWeight: '600'
                         }}>
                             {((stock.price - item.initial_price) / item.initial_price * 100).toFixed(1)}% since add

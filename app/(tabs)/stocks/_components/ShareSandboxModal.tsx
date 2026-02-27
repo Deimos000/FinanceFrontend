@@ -282,7 +282,7 @@ export default function ShareSandboxModal({ visible, sandboxId, sandboxName, onC
 
                             {friends.length > 0 && unsharedFriends.length === 0 && shares.length > 0 && (
                                 <View style={{ padding: 24, alignItems: 'center' }}>
-                                    <Ionicons name="checkmark-circle" size={28} color={colors.secondary} style={{ marginBottom: 8, opacity: 0.7 }} />
+                                    <Ionicons name="checkmark-circle" size={28} color={colors.success} style={{ marginBottom: 8, opacity: 0.7 }} />
                                     <Text style={{ color: colors.icon, textAlign: 'center', fontSize: 14, opacity: 0.8 }}>
                                         All friends have access to this sandbox.
                                     </Text>

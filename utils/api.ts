@@ -8,7 +8,7 @@
  * In production : BACKEND_URL = your Cloud Run URL
  */
 
-import { Platform } from 'react-native';
+import { Platform, DeviceEventEmitter } from 'react-native';
 import * as SecureStore from './storage';
 
 // ── Configure your backend URL here ─────────────────────
@@ -54,6 +54,9 @@ export async function api<T = any>(
     });
 
     if (!res.ok) {
+        if (res.status === 401) {
+            DeviceEventEmitter.emit('onUnauthorized');
+        }
         const body = await res.text();
         throw new Error(`API ${res.status}: ${body}`);
     }
@@ -63,12 +66,22 @@ export async function api<T = any>(
 
 // ── Settings ─────────────────────────────────────────────
 export const fetchSettings = () =>
-    api<{ gemini_api_key?: string }>('/auth/settings');
+    api<{
+        gemini_api_key?: string;
+        theme?: string;
+        color_scheme_id?: string;
+        background_style?: string;
+    }>('/auth/settings');
 
-export const updateSettings = (gemini_api_key: string) =>
+export const updateSettings = (prefs: {
+    gemini_api_key?: string;
+    theme?: string;
+    color_scheme_id?: string;
+    background_style?: string;
+}) =>
     api('/auth/settings', {
         method: 'PUT',
-        body: JSON.stringify({ gemini_api_key }),
+        body: JSON.stringify(prefs),
     });
 
 // ── Accounts ─────────────────────────────────────────────

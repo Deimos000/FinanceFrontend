@@ -42,7 +42,7 @@ export interface ColorScheme {
     lightBorder: string;
 }
 
-export type BackgroundStyle = 'pitch' | 'charcoal' | 'midnight' | 'indigo' | 'aurora' | 'universe';
+export type BackgroundStyle = 'pitch' | 'charcoal' | 'midnight' | 'indigo' | 'aurora' | 'universe' | 'forest' | 'slate';
 
 export interface BackgroundOption {
     id: BackgroundStyle;
@@ -54,7 +54,9 @@ export interface BackgroundOption {
 export const BACKGROUND_OPTIONS: BackgroundOption[] = [
     { id: 'pitch', name: 'Pitch Black', color: '#000000', description: 'Deep OLED black for maximum battery saving.' },
     { id: 'charcoal', name: 'Charcoal', color: '#121212', description: 'Softer gray, less intense than pure black.' },
+    { id: 'slate', name: 'Deep Slate', color: '#0F172A', description: 'Cool blue-gray for a modern, professional feel.' },
     { id: 'midnight', name: 'Midnight', color: '#0B1117', description: 'A sophisticated navy/blue-tinted dark.' },
+    { id: 'forest', name: 'Dark Forest', color: '#061710', description: 'Very deep green, excellent with Emerald or Teal.' },
     { id: 'indigo', name: 'Indigo Night', color: '#0F0B1E', description: 'Deep purple-indigo matching the Persian theme.' },
     { id: 'aurora', name: 'Aurora Mesh', color: '#1A1A2E', description: 'Subtle, shifting animated gradient.' },
     { id: 'universe', name: '✨ Universe', color: '#000000', description: 'Live galaxy particle animation.' },
@@ -100,7 +102,7 @@ export const COLOR_SCHEMES: ColorScheme[] = [
     },
     {
         id: 'emerald',
-        name: 'Emerald',
+        name: 'Emerald Green',
         icon: 'leaf',
         preview: '#10B981',
         primary: '#059669',
@@ -136,7 +138,7 @@ export const COLOR_SCHEMES: ColorScheme[] = [
     },
     {
         id: 'rose',
-        name: 'Rose',
+        name: 'Rose Pink',
         icon: 'rose',
         preview: '#F43F5E',
         primary: '#E11D48',
@@ -148,7 +150,7 @@ export const COLOR_SCHEMES: ColorScheme[] = [
     },
     {
         id: 'amber',
-        name: 'Amber',
+        name: 'Golden Amber',
         icon: 'sunny',
         preview: '#F59E0B',
         primary: '#D97706',
@@ -158,6 +160,66 @@ export const COLOR_SCHEMES: ColorScheme[] = [
         lightCard: '#FFFEF5',
         ...shared,
     },
+    {
+        id: 'graphite',
+        name: 'Graphite',
+        icon: 'business',
+        preview: '#475569',
+        primary: '#334155',
+        primaryLight: '#94A3B8',
+        darkCard: '#1E293B',
+        lightBackground: '#F1F5F9',  // Cool gray
+        lightCard: '#FFFFFF',
+        ...shared,
+    },
+    {
+        id: 'teal',
+        name: 'Wealth Teal',
+        icon: 'wallet',
+        preview: '#0F766E',
+        primary: '#0D9488',
+        primaryLight: '#2DD4BF',
+        darkCard: '#112A28',
+        lightBackground: '#CCFBF1',  // Soft teal
+        lightCard: '#F0FDFA',
+        ...shared,
+    },
+    {
+        id: 'cyber-cyan',
+        name: 'Cyber Cyan',
+        icon: 'hardware-chip',
+        preview: '#06B6D4',
+        primary: '#0891B2',
+        primaryLight: '#22D3EE',
+        darkCard: '#0f2933',
+        lightBackground: '#CFFAFE',  // Cyan tint
+        lightCard: '#ECFEFF',
+        ...shared,
+    },
+    {
+        id: 'crimson',
+        name: 'Crimson Red',
+        icon: 'flame',
+        preview: '#E11D48',
+        primary: '#BE123C',
+        primaryLight: '#FB7185',
+        darkCard: '#2F111B',
+        lightBackground: '#FFE4E6',  // Rose tint
+        lightCard: '#FFF1F2',
+        ...shared,
+    },
+    {
+        id: 'navy',
+        name: 'Classic Navy',
+        icon: 'briefcase',
+        preview: '#1E3A8A',
+        primary: '#1D4ED8',
+        primaryLight: '#60A5FA',
+        darkCard: '#0E172E',
+        lightBackground: '#DBEAFE',  // Light Blue
+        lightCard: '#EFF6FF',
+        ...shared,
+    }
 ];
 
 export const DEFAULT_SCHEME_ID = 'persian-indigo';

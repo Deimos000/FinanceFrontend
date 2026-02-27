@@ -36,6 +36,14 @@ export async function GET(request: Request) {
             targetUrl = `https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(query)}&quotesCount=10&newsCount=0`;
             cacheKey = `search:${query}`;
             ttl = 60 * 60 * 1000; // Cache searches for 1 hour
+        } else if (type === 'quotes') {
+            const symbols = url.searchParams.get('symbols');
+            if (!symbols) {
+                return Response.json({ error: 'Symbols param required for quotes' }, { status: 400, headers });
+            }
+            targetUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(symbols)}`;
+            cacheKey = `quotes:${symbols}`;
+            ttl = 60 * 1000; // 1 minute
         } else {
             if (!symbol) {
                 return Response.json({ error: 'Symbol param required for quote' }, { status: 400, headers });

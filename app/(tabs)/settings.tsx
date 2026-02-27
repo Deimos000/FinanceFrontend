@@ -155,7 +155,7 @@ export default function SettingsScreen() {
         setIsSavingKey(true);
         setSaveSuccess(false);
         try {
-            await updateSettings(geminiApiKey);
+            await updateSettings({ gemini_api_key: geminiApiKey });
             setSaveSuccess(true);
             setTimeout(() => setSaveSuccess(false), 2000);
         } catch (error) {
